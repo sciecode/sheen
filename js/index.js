@@ -4,10 +4,6 @@ var PULL = 20.5;
 var TIMESTEP = 16 / 1000;
 var TIMESTEP_SQ = TIMESTEP * TIMESTEP;
 
-var currentTime = Date.now();
-var accumulator = 0;
-var dt = TIMESTEP*1000;
-
 let renderer, camera, scene,
 controls, mesh, stats,
 interacting = false,
@@ -23,61 +19,105 @@ mouse3d = new THREE.Vector3(),
 normal = new THREE.Vector3(),
 
 raycaster = new THREE.Raycaster(),
-plane = new THREE.Plane( undefined, -200 ),
+plane = new THREE.Plane( undefined, -180 );
 
-texture = new THREE.TextureLoader().load( "https://raw.githubusercontent.com/aatishb/drape/master/textures/patterns/circuit_pattern.png", init );
+init();
 
 function init() {
 
 	// core
 
-	renderer = new THREE.WebGLRenderer( { antialias: true, alpha: true });
+	renderer = new THREE.WebGLRenderer( { antialias: true } );
 	renderer.setSize( window.innerWidth, window.innerHeight );
 	renderer.setPixelRatio( window.devicePixelRatio );
+
+	renderer.gammaOutput = true;
+	renderer.physicallyCorrectLights = true;
+
+	renderer.shadowMap.enabled = true;
+	renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
 	document.body.appendChild( renderer.domElement );
 
 	scene = new THREE.Scene();
 	renderer.setClearColor( 0x0f1519 );
 
-	camera = new THREE.PerspectiveCamera( 60, window.innerWidth/window.innerHeight, 1, 1000 );
-	camera.position.z = -100;
-	camera.position.y = 110;
-	camera.position.x = 160;
+	camera = new THREE.PerspectiveCamera( 60, window.innerWidth/window.innerHeight, 1, 10000 );
+	camera.position.z = -350;
+	camera.position.y = -50;
+	camera.position.x = 0;
 
 	controls = new THREE.OrbitControls( camera, renderer.domElement );
 	controls.enablePan = false;
 
-	stats = new Stats();
-	document.body.appendChild( stats.dom );
+	// stats = new Stats();
+	// document.body.appendChild( stats.dom );
 
 	// lights
-
-	const directionalLight = new THREE.DirectionalLight( 0xba8b8b, 1.0 );
-	directionalLight.position.set( 1, 1, 1 );
-	scene.add( directionalLight );
-
-	const directionalLight2 = new THREE.DirectionalLight( 0x8bbab4, 1.6 );
-	directionalLight2.position.set( 1, 1, -1 );
-	scene.add( directionalLight2 )
-
-	const light = new THREE.AmbientLight(); // soft white light
+	const light = new THREE.AmbientLight( 0xeeffe6, 0.9 );
 	scene.add( light );
 
-	const plight = new THREE.PointLight( 0xffffff, 1.0, 700 );
-	plight.position.set( 0, 350, 0 );
-	scene.add( plight );
+	const spotLight = new THREE.SpotLight( 0xfd8b8b, 2.6, 4000, Math.PI/6, 0.2, 0.11 );
+	spotLight.position.set( 0.9, 0.1, -0.5 ).multiplyScalar( 400 );
+	spotLight.castShadow = true;
+	spotLight.shadow.radius = 5;
+	spotLight.shadow.camera.far = 4000
+	spotLight.shadow.mapSize.height = 4096;
+	spotLight.shadow.mapSize.width = 4096;
+	scene.add( spotLight );
 
+	const spotLight2 = new THREE.SpotLight( 0x6b7af4, 2.6, 4000, Math.PI/6, 0.2, 0.11 );
+	spotLight2.position.set( -0.91, 0.1, -0.5 ).multiplyScalar( 400 );
+	spotLight2.castShadow = true;
+	spotLight2.shadow.radius = 5;
+	spotLight2.shadow.camera.far = 4000;
+	spotLight2.shadow.mapSize.height = 4096;
+	spotLight2.shadow.mapSize.width = 4096;
+	scene.add( spotLight2 );
+
+	const directionalLight3 = new THREE.DirectionalLight( 0xffffff, 0.6 );
+	directionalLight3.position.set( 0, 1, -0.2 );
+	scene.add( directionalLight3 )
+
+	const spotLight3 = new THREE.SpotLight( 0xffffff, 1.0, 4000, Math.PI/3, 1.4, 0.08 );
+	spotLight3.position.set( 0, 0, -1 ).multiplyScalar( 400 );
+	spotLight3.castShadow = true;
+	spotLight3.shadow.radius = 5;
+	spotLight3.shadow.camera.far = 4000;
+	spotLight3.shadow.mapSize.height = 4096;
+	spotLight3.shadow.mapSize.width = 4096;
+	scene.add( spotLight3 );
+
+	const bgMaterial = new THREE.MeshPhysicalMaterial( {
+
+		color: 0xc9c9c9,
+		metalness: 0.9,
+		roughness: 0.4
+
+	} );
+
+	const bgGeometry = new THREE.PlaneBufferGeometry( 8000, 8000 );
+
+	const bg = new THREE.Mesh( bgGeometry, bgMaterial );
+	scene.add( bg );
+	bg.receiveShadow = true;
+	bg.rotation.x += Math.PI * 0.9;
+	bg.position.set( 0, -100, 2000 );
 
 	// mesh
 
-	const material = new THREE.MeshPhysicalMaterial( { color: 0xaa2949 } );
+	const material = new THREE.MeshPhysicalMaterial( {
+		color: 0xffda20,
+		metalness: 0.1,
+		roughness: 0.5,
+		clearCoat: 0.8,
+		clearCoatRoughness: 0.3
+	} );
 
-	// const geometry = new THREE.SphereGeometry( 100, 50, 50 );
 	const geometry = new THREE.IcosahedronGeometry( 100, 5 );
 
-	console.log( geometry.vertices.length )
-
 	mesh = new THREE.Mesh( geometry, material );
+	mesh.castShadow = true;
 	scene.add( mesh );
 
 
@@ -141,7 +181,7 @@ function animate() {
 
 		requestAnimationFrame( animate );
 
-		stats.begin();
+		// stats.begin();
 
 		updateCloth();
 
@@ -149,7 +189,7 @@ function animate() {
 
 		renderer.render( scene, camera );
 
-		stats.end();
+		// stats.end();
 
 }
 
@@ -164,7 +204,6 @@ function updateCloth() {
 
 	}
 
-	mesh.geometry.computeFaceNormals();
 	mesh.geometry.computeVertexNormals();
 
 	mesh.geometry.normalsNeedUpdate = true;
@@ -247,7 +286,7 @@ function simulate( ) {
 
 				const distance = particles[ psel ].original.distanceTo( particles[i].original );
 
-				if ( particles[i].distance < 10 ) {
+				if ( particles[i].distance < 15 ) {
 
 					particles[ i ].position.add( v0 );
 
@@ -282,11 +321,12 @@ function satisfyConstraints( p1, p2, distance ) {
 
 		if ( currentDist === 0 ) return; // prevents division by 0
 
-		var correction = v0.multiplyScalar( 1 - distance / currentDist );
-		var correctionHalf = correction.multiplyScalar( 0.5 );
+		currentDist = Math.min( currentDist, 10 );
 
-		p1.position.add( correctionHalf );
-		p2.position.sub( correctionHalf );
+		v0.multiplyScalar( ( 1 - distance / currentDist ) * 0.5 * 0.76 );
+
+		p1.position.add( v0 );
+		p2.position.sub( v0 );
 
 }
 
