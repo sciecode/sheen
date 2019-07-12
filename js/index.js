@@ -1,4 +1,5 @@
 var steps = 10;
+var stiffness = 0.76;
 var DRAG = 0.88;
 var PULL = 20.5;
 var TIMESTEP = 16 / 1000;
@@ -50,8 +51,8 @@ function init() {
 	controls = new THREE.OrbitControls( camera, renderer.domElement );
 	controls.enablePan = false;
 
-	// stats = new Stats();
-	// document.body.appendChild( stats.dom );
+	stats = new Stats();
+	document.body.appendChild( stats.dom );
 
 	// lights
 	const light = new THREE.AmbientLight( 0xeeffe6, 0.9 );
@@ -149,7 +150,7 @@ function createParticles( geometry ) {
 
 			particles[ face.a ].adj.push( face.b );
 			particles[ face.b ].adj.push( face.a );
-			constraints.push( [ particles[ face.a ], particles[ face.b ], dist ] );
+			constraints.push( [ particles[ face.a ], particles[ face.b ], dist * dist ] );
 
 		}
 
@@ -159,7 +160,7 @@ function createParticles( geometry ) {
 
 			particles[ face.a ].adj.push( face.c );
 			particles[ face.c ].adj.push( face.a );
-			constraints.push( [ particles[ face.a ], particles[ face.c ], dist ] );
+			constraints.push( [ particles[ face.a ], particles[ face.c ], dist * dist ] );
 
 		}
 
@@ -169,7 +170,7 @@ function createParticles( geometry ) {
 
 			particles[ face.b ].adj.push( face.c );
 			particles[ face.c ].adj.push( face.b );
-			constraints.push( [ particles[ face.b ], particles[ face.c ], dist ] );
+			constraints.push( [ particles[ face.b ], particles[ face.c ], dist * dist ] );
 
 		}
 
@@ -181,7 +182,7 @@ function animate() {
 
 		requestAnimationFrame( animate );
 
-		// stats.begin();
+		stats.begin();
 
 		updateCloth();
 
@@ -189,7 +190,7 @@ function animate() {
 
 		renderer.render( scene, camera );
 
-		// stats.end();
+		stats.end();
 
 }
 
@@ -314,19 +315,17 @@ function simulate( ) {
 
 }
 
-function satisfyConstraints( p1, p2, distance ) {
+function satisfyConstraints( p1, p2, distSq ) {
 
-		v0.subVectors( p2.position, p1.position );
-		var currentDist = v0.length();
+	if ( p2.position.equals( p1.position) ) return;
 
-		if ( currentDist === 0 ) return; // prevents division by 0
+	v0.subVectors( p2.position, p1.position );
 
-		currentDist = Math.min( currentDist, 10 );
+	const diff = distSq / ( v0.lengthSq() + distSq ) - 0.5;
+	v0.multiplyScalar( diff * stiffness );
 
-		v0.multiplyScalar( ( 1 - distance / currentDist ) * 0.5 * 0.76 );
-
-		p1.position.add( v0 );
-		p2.position.sub( v0 );
+	p1.position.sub( v0 );
+	p2.position.add( v0 );
 
 }
 
