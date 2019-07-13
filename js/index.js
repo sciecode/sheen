@@ -1,10 +1,10 @@
-var steps = 8;
+var steps = 12;
 var stiffness = 0.76;
 var mass = 0.12;
-var cutoff = 0.76;
-var DRAG = 0.85;
+var cutoff = 0.88;
+var DRAG = 0.91;
 var PULL = 28.5;
-var TIMESTEP = 14 / 1000;
+var TIMESTEP = 16 / 1000;
 var TIMESTEP_SQ = TIMESTEP * TIMESTEP;
 
 let renderer, camera, scene,
@@ -20,7 +20,6 @@ mouse = new THREE.Vector2(),
 tmpmouse = new THREE.Vector3(),
 mouse3d = new THREE.Vector3(),
 normal = new THREE.Vector3(),
-
 raycaster = new THREE.Raycaster(),
 plane = new THREE.Plane( undefined, -180 );
 
@@ -118,6 +117,7 @@ function init() {
 	} );
 
 	const geometry = new THREE.IcosahedronGeometry( 100, 5 );
+	// console.log( geometry );
 
 	mesh = new THREE.Mesh( geometry, material );
 	mesh.castShadow = true;
