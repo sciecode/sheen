@@ -9,7 +9,7 @@ var TIMESTEP_SQ = TIMESTEP * TIMESTEP;
 
 let renderer, camera, scene,
 controls, mesh, stats,
-interacting = false,
+position, interacting = false,
 psel = undefined;
 
 const particles = [],
@@ -116,13 +116,12 @@ function init() {
 		clearCoatRoughness: 0.3
 	} );
 
-	const geometry = new THREE.IcosahedronGeometry( 100, 5 );
-	// console.log( geometry );
+	const ico = new THREE.IcosahedronBufferGeometry( 100, 5 );
+	const geometry = THREE.BufferGeometryUtils.mergeVertices( ico, 1.5 );
 
 	mesh = new THREE.Mesh( geometry, material );
 	mesh.castShadow = true;
 	scene.add( mesh );
-
 
 	// particles
 
@@ -134,45 +133,51 @@ function init() {
 
 function createParticles( geometry ) {
 
+	const index = geometry.index;
+	position = geometry.attributes.position;
 
-	for ( let i = 0; i < geometry.vertices.length; i++ ) {
+	for ( let i = 0, il = position.count; i < il; i++ ) {
 
-		const t = geometry.vertices[i];
-		particles.push( new Particle( t.x, t.y, t.z, mass ) );
+		v0.fromBufferAttribute( position, i );
+		particles.push( new Particle( v0.x, v0.y, v0.z, mass ) );
 
 	}
 
-	for ( let i = 0; i < geometry.faces.length; i++ ) {
+	for ( let i = 0, il = index.count / 3; i < il; i++ ) {
 
-		const face = geometry.faces[i];
+		const i3 = i * 3;
 
-		if ( ! particles[ face.b ].adj.includes( face.a ) ) {
+		const a = index.getX( i3 + 0 );
+		const b = index.getX( i3 + 1 );
+		const c = index.getX( i3 + 2 );
 
-			const dist = particles[ face.a ].original.distanceTo( particles[ face.b ].original );
+		if ( ! particles[ b ].adj.includes( a ) ) {
 
-			particles[ face.a ].adj.push( face.b );
-			particles[ face.b ].adj.push( face.a );
-			constraints.push( [ particles[ face.a ], particles[ face.b ], dist * dist ] );
+			const dist = particles[ a ].original.distanceTo( particles[ b ].original );
 
-		}
-
-		if ( ! particles[ face.c ].adj.includes( face.a ) ) {
-
-			const dist = particles[ face.a ].original.distanceTo( particles[ face.c ].original );
-
-			particles[ face.a ].adj.push( face.c );
-			particles[ face.c ].adj.push( face.a );
-			constraints.push( [ particles[ face.a ], particles[ face.c ], dist * dist ] );
+			particles[ a ].adj.push( b );
+			particles[ b ].adj.push( a );
+			constraints.push( [ particles[ a ], particles[ b ], dist * dist ] );
 
 		}
 
-		if ( ! particles[ face.c ].adj.includes( face.b ) ) {
+		if ( ! particles[ c ].adj.includes( a ) ) {
 
-			const dist = particles[ face.b ].original.distanceTo( particles[ face.c ].original );
+			const dist = particles[ a ].original.distanceTo( particles[ c ].original );
 
-			particles[ face.b ].adj.push( face.c );
-			particles[ face.c ].adj.push( face.b );
-			constraints.push( [ particles[ face.b ], particles[ face.c ], dist * dist ] );
+			particles[ a ].adj.push( c );
+			particles[ c ].adj.push( a );
+			constraints.push( [ particles[ a ], particles[ c ], dist * dist ] );
+
+		}
+
+		if ( ! particles[ c ].adj.includes( b ) ) {
+
+			const dist = particles[ b ].original.distanceTo( particles[ c ].original );
+
+			particles[ b ].adj.push( c );
+			particles[ c ].adj.push( b );
+			constraints.push( [ particles[ b ], particles[ c ], dist * dist ] );
 
 		}
 
@@ -201,13 +206,14 @@ function updateCloth() {
 
 	for ( var i = 0, il = particles.length; i < il; i++ ) {
 
-		mesh.geometry.vertices[ i ].copy( particles[ i ].position );
+		const p = particles[ i ].position;
+
+		position.setXYZ( i, p.x, p.y, p.z );
 
 	}
 
+	position.needsUpdate = true;
 	mesh.geometry.computeVertexNormals();
-
-	mesh.geometry.verticesNeedUpdate = true;
 
 }
 
@@ -263,11 +269,7 @@ function simulate( ) {
 
 	for ( let i = 0; i < il; i++ ) {
 
-		const particle = particles[ i ];
-
-		v0.copy( particle.original );
-		particle.addForce( v0.sub( particle.position ).multiplyScalar( PULL ) );
-		particle.integrate( TIMESTEP_SQ );
+		particles[ i ].integrate( TIMESTEP_SQ );
 
 	}
 
