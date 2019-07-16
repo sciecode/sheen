@@ -5,6 +5,7 @@ function Particle ( x, y, z, mass ) {
 	this.previous = new THREE.Vector3( x, y, z );
 	this.original = new THREE.Vector3( x, y, z );
 
+	this.colors = new Array( 20 ).fill( false );
 	this.adj = [];
 	this.distance = 0;
 

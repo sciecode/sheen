@@ -1,3 +1,5 @@
+import * as FBO from './fbo.js';
+
 var steps = 12;
 var stiffness = 0.76;
 var mass = 0.12;
@@ -125,7 +127,10 @@ function init() {
 
 	// particles
 
+	position = geometry.attributes.position;
 	createParticles( geometry );
+
+	FBO.init( renderer, position );
 
 	animate();
 
@@ -134,7 +139,6 @@ function init() {
 function createParticles( geometry ) {
 
 	const index = geometry.index;
-	position = geometry.attributes.position;
 
 	for ( let i = 0, il = position.count; i < il; i++ ) {
 
@@ -183,6 +187,32 @@ function createParticles( geometry ) {
 
 	}
 
+	for ( let i = 0, il = constraints.length; i < il; i++ ) {
+
+		const con = constraints[i];
+
+		let k = 1;
+		while ( true ) {
+
+			while ( con[0].colors[k] ) k++;
+
+			if ( ! con[1].colors[k] ) {
+
+				con.push( k );
+				con[0].colors[k] = true;
+				con[1].colors[k] = true;
+				break;
+
+			} else {
+
+				k++;
+
+			}
+
+		}
+
+	}
+
 }
 
 function animate() {
@@ -191,7 +221,7 @@ function animate() {
 
 		requestAnimationFrame( animate );
 
-		updateCloth();
+		// updateCloth();
 
 		renderer.render( scene, camera );
 
@@ -357,8 +387,8 @@ window.onmouseup = function(evt) {
 
 window.onresize = function() {
 
-	w = window.innerWidth;
-	h = window.innerHeight;
+	const w = window.innerWidth;
+	const h = window.innerHeight;
 
 	camera.aspect = w / h;
 	camera.updateProjectionMatrix();
