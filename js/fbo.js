@@ -217,7 +217,7 @@ function integrate() {
 
 }
 
-function constrain( offset ) {
+function solveConstraint( offset ) {
 
 	const tID = ( offset < 4 ) ? 0 : 1;
 	const cID = offset % 4;
@@ -245,7 +245,7 @@ function update() {
 
 		for ( let j = 0; j < 8; j++ ) {
 
-			constrain( j );
+			solveConstraint( j );
 
 		}
 
