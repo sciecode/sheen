@@ -2,8 +2,7 @@
 import through_vert from '../glsl/through.vert.js';
 import through_frag from '../glsl/through.frag.js';
 import integrate_frag from '../glsl/integrate.frag.js';
-// import position_frag from '../glsl/position.frag.js';
-// import velocity_frag from '../glsl/velocity.frag.js';
+import constraint_frag from '../glsl/constraint.frag.js';
 
 let RESOLUTION,
 	renderer, mesh,
@@ -59,18 +58,21 @@ const tSize = new THREE.Vector2(),
 
 	constraintShader = new THREE.RawShaderMaterial( {
 		uniforms: {
+			cID: { value: null },
 			tSize: { type: 'v2', value: tSize },
-			texture: { type: 't' }
+			tOriginal: { type: 't' },
+			tPosition: { type: 't' },
+			tConstraints: { type: 't' }
 		},
 		vertexShader: through_vert,
-		fragmentShader: through_frag,
+		fragmentShader: constraint_frag,
 		fog: false,
 		lights: false,
 		depthWrite: false,
 		depthTest: false
 	} );
 
-function init( WebGLRenderer, vertices, constraints ) {
+function init( WebGLRenderer, vertices, particles ) {
 
 	// setup
 	renderer = WebGLRenderer;
@@ -97,7 +99,7 @@ function init( WebGLRenderer, vertices, constraints ) {
 	originalRT = new THREE.WebGLRenderTarget( RESOLUTION, RESOLUTION, {
 		minFilter: THREE.NearestFilter,
 		magFilter: THREE.NearestFilter,
-		format: THREE.RGBAFormat,
+		format: THREE.RGBFormat,
 		type: THREE.FloatType,
 		depthTest: false,
 		depthWrite: false,
@@ -113,10 +115,16 @@ function init( WebGLRenderer, vertices, constraints ) {
 	constraintRTs[0] = originalRT.clone();
 	constraintRTs[1] = originalRT.clone();
 
+	constraintRTs[0].texture.format = THREE.RGBAFormat;
+	constraintRTs[1].texture.format = THREE.RGBAFormat;
+
 	// prepare
 	copyTexture( createPositionTexture( vertices ), originalRT );
 	copyTexture( createPositionTexture( vertices, true ), previousRT );
 	copyTexture( previousRT, positionRT );
+
+	copyTexture( createConstraintsTexture( particles, 0 ), constraintRTs[0] );
+	copyTexture( createConstraintsTexture( particles, 4 ), constraintRTs[1] );
 
 }
 
@@ -133,23 +141,50 @@ function copyTexture( input, output ) {
 function createPositionTexture( vertices, expand ) {
 
 	const exp = ( expand ) ? 1.5 : 1;
-	const data = new Float32Array( RESOLUTION * RESOLUTION * 4 );
+	const data = new Float32Array( RESOLUTION * RESOLUTION * 3 );
 	const length = vertices.array.length;
 
 	for ( let i = 0; i < RESOLUTION; i++ ) {
 
 		for ( let j = 0; j < RESOLUTION; j++ ) {
 
-			const i4 = i * RESOLUTION * 4 + j * 4;
 			const i3 = i * RESOLUTION * 3 + j * 3;
 
 			if ( i3 >= length ) break;
 
-			data[ i4 + 0 ] = vertices.array[ i3 + 0 ] * exp;
-			data[ i4 + 1 ] = vertices.array[ i3 + 1 ] * exp;
-			data[ i4 + 2 ] = vertices.array[ i3 + 2 ] * exp;
+			data[ i3 + 0 ] = vertices.array[ i3 + 0 ] * exp;
+			data[ i3 + 1 ] = vertices.array[ i3 + 1 ] * exp;
+			data[ i3 + 2 ] = vertices.array[ i3 + 2 ] * exp;
 
 		}
+
+	}
+
+	const tmp = {};
+	tmp.texture = new THREE.DataTexture( data, RESOLUTION, RESOLUTION, THREE.RGBFormat, THREE.FloatType );
+	tmp.texture.minFilter = THREE.NearestFilter;
+	tmp.texture.magFilter = THREE.NearestFilter;
+	tmp.texture.needsUpdate = true;
+	tmp.texture.generateMipmaps = false;
+	tmp.texture.flipY = false;
+
+	return tmp;
+
+}
+
+function createConstraintsTexture( particles, k ) {
+
+	const data = new Float32Array( RESOLUTION * RESOLUTION * 4 );
+	const length = particles.length;
+
+	for ( let i = 0; i < length; i++ ) {
+
+		const i4 = i * 4;
+
+		data[ i4 + 0 ] = ( particles[i].colors[ k + 0 ] === undefined ) ? -1 : particles[i].colors[ k + 0 ];
+		data[ i4 + 1 ] = ( particles[i].colors[ k + 1 ] === undefined ) ? -1 : particles[i].colors[ k + 1 ];
+		data[ i4 + 2 ] = ( particles[i].colors[ k + 2 ] === undefined ) ? -1 : particles[i].colors[ k + 2 ];
+		data[ i4 + 3 ] = ( particles[i].colors[ k + 3 ] === undefined ) ? -1 : particles[i].colors[ k + 3 ];
 
 	}
 
@@ -182,9 +217,39 @@ function integrate() {
 
 }
 
+function constrain( offset ) {
+
+	const tID = ( offset < 4 ) ? 0 : 1;
+	const cID = offset % 4;
+
+	mesh.material = constraintShader;
+	constraintShader.uniforms.cID.value = cID;
+	constraintShader.uniforms.tOriginal.value = originalRT.texture;
+	constraintShader.uniforms.tPosition.value = positionRT.texture;
+	constraintShader.uniforms.tConstraints.value = constraintRTs[tID].texture;
+
+	renderer.setRenderTarget( targetRT );
+	renderer.render( scene, camera );
+
+	const tmp = positionRT;
+	positionRT = targetRT;
+	targetRT = tmp;
+
+}
+
 function update() {
 
 	integrate();
+
+	for ( let i = 0; i < 80; i++ ) {
+
+		for ( let j = 0; j < 8; j++ ) {
+
+			constrain( j );
+
+		}
+
+	}
 
 }
 

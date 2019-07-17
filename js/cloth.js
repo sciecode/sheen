@@ -21,7 +21,7 @@ function init( geo ) {
 		shader.vertexShader = shader.vertexShader.replace(
 			'#include <beginnormal_vertex>',
 			`vec3 transformed = texture2D( tPosition, position.xy ).xyz;
-			vec3 objectNormal = normalize( transformed );
+			 vec3 objectNormal = normalize( transformed );
 			`
 		);
 		shader.vertexShader = shader.vertexShader.replace(

@@ -113,7 +113,9 @@ function init() {
 	const geometry = THREE.BufferGeometryUtils.mergeVertices( ico, 1.5 );
 	position = geometry.attributes.position;
 
-	FBO.init( renderer, position );
+	createParticles( geometry );
+
+	FBO.init( renderer, position, particles );
 
 	CLOTH.init( geometry );
 	scene.add( CLOTH.mesh );
@@ -147,7 +149,7 @@ function createParticles( geometry ) {
 
 			particles[ a ].adj.push( b );
 			particles[ b ].adj.push( a );
-			constraints.push( [ particles[ a ], particles[ b ], dist * dist ] );
+			constraints.push( [ a, b, dist * dist ] );
 
 		}
 
@@ -157,7 +159,7 @@ function createParticles( geometry ) {
 
 			particles[ a ].adj.push( c );
 			particles[ c ].adj.push( a );
-			constraints.push( [ particles[ a ], particles[ c ], dist * dist ] );
+			constraints.push( [ a, c, dist * dist ] );
 
 		}
 
@@ -167,7 +169,7 @@ function createParticles( geometry ) {
 
 			particles[ b ].adj.push( c );
 			particles[ c ].adj.push( b );
-			constraints.push( [ particles[ b ], particles[ c ], dist * dist ] );
+			constraints.push( [ b, c, dist * dist ] );
 
 		}
 
@@ -180,13 +182,13 @@ function createParticles( geometry ) {
 		let k = 1;
 		while ( true ) {
 
-			while ( con[0].colors[k] ) k++;
+			while ( particles[ con[0] ].colors[k] !== undefined ) k++;
 
-			if ( ! con[1].colors[k] ) {
+			if ( particles[ con[1] ].colors[k] === undefined ) {
 
 				con.push( k );
-				con[0].colors[k] = true;
-				con[1].colors[k] = true;
+				particles[ con[0] ].colors[k] = con[1];
+				particles[ con[1] ].colors[k] = con[0];
 				break;
 
 			} else {
@@ -209,7 +211,7 @@ function animate() {
 
 	stats.begin();
 
-	if ( t > 100 ) FBO.update();
+	FBO.update();
 
 	renderer.setRenderTarget( null );
 	renderer.render( scene, camera );
@@ -335,8 +337,6 @@ function simulate( ) {
 }
 
 function satisfyConstraints( p1, p2, distSq ) {
-
-	if ( p2.position.equals( p1.position) ) return;
 
 	v0.subVectors( p2.position, p1.position );
 
