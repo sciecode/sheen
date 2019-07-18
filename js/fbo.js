@@ -1,8 +1,9 @@
 // shader-import-block
 import through_vert from '../glsl/through.vert.js';
 import through_frag from '../glsl/through.frag.js';
+import mouse_frag from '../glsl/mouse.frag.js';
 import integrate_frag from '../glsl/integrate.frag.js';
-import constraint_frag from '../glsl/constraint.frag.js';
+import constraints_frag from '../glsl/constraints.frag.js';
 
 let RESOLUTION, MOUSE,
 	renderer, mesh,
@@ -45,18 +46,20 @@ const tSize = new THREE.Vector2(),
 
 	mouseShader = new THREE.RawShaderMaterial( {
 		uniforms: {
+			psel: { value: null },
+			mouse: { type: 'v3' },
 			tSize: { type: 'v2', value: tSize },
-			texture: { type: 't' }
+			tOriginal: { type: 't' }
 		},
 		vertexShader: through_vert,
-		fragmentShader: through_frag,
+		fragmentShader: mouse_frag,
 		fog: false,
 		lights: false,
 		depthWrite: false,
 		depthTest: false
 	} ),
 
-	constraintShader = new THREE.RawShaderMaterial( {
+	constraintsShader = new THREE.RawShaderMaterial( {
 		uniforms: {
 			cID: { value: null },
 			tSize: { type: 'v2', value: tSize },
@@ -65,7 +68,7 @@ const tSize = new THREE.Vector2(),
 			tConstraints: { type: 't' }
 		},
 		vertexShader: through_vert,
-		fragmentShader: constraint_frag,
+		fragmentShader: constraints_frag,
 		fog: false,
 		lights: false,
 		depthWrite: false,
@@ -121,8 +124,8 @@ function init( WebGLRenderer, vertices, particles, mouse ) {
 
 	// prepare
 	copyTexture( createPositionTexture( vertices ), originalRT );
-	copyTexture( createPositionTexture( vertices, true ), previousRT );
-	copyTexture( previousRT, positionRT );
+	copyTexture( originalRT, previousRT );
+	copyTexture( originalRT, positionRT );
 
 	copyTexture( createConstraintsTexture( particles, 0 ), constraintRTs[0] );
 	copyTexture( createConstraintsTexture( particles, 4 ), constraintRTs[1] );
@@ -218,16 +221,32 @@ function integrate() {
 
 }
 
-function solveConstraint( offset ) {
+function solveConstraints( offset ) {
 
 	const tID = ( offset < 4 ) ? 0 : 1;
 	const cID = offset % 4;
 
-	mesh.material = constraintShader;
-	constraintShader.uniforms.cID.value = cID;
-	constraintShader.uniforms.tOriginal.value = originalRT.texture;
-	constraintShader.uniforms.tPosition.value = positionRT.texture;
-	constraintShader.uniforms.tConstraints.value = constraintRTs[tID].texture;
+	mesh.material = constraintsShader;
+	constraintsShader.uniforms.cID.value = cID;
+	constraintsShader.uniforms.tOriginal.value = originalRT.texture;
+	constraintsShader.uniforms.tPosition.value = positionRT.texture;
+	constraintsShader.uniforms.tConstraints.value = constraintRTs[tID].texture;
+
+	renderer.setRenderTarget( targetRT );
+	renderer.render( scene, camera );
+
+	const tmp = positionRT;
+	positionRT = targetRT;
+	targetRT = tmp;
+
+}
+
+function mouseOffset() {
+
+	mesh.material = mouseShader;
+	mouseShader.uniforms.psel.value = MOUSE.psel;
+	mouseShader.uniforms.mouse.value = MOUSE.mouse3d;
+	mouseShader.uniforms.tOriginal.value = originalRT.texture;
 
 	renderer.setRenderTarget( targetRT );
 	renderer.render( scene, camera );
@@ -240,22 +259,17 @@ function solveConstraint( offset ) {
 
 function update() {
 
-	const interacting = MOUSE.update();
-
-	if ( interacting ) {
-
-		console.log( MOUSE.mouse3d, MOUSE.psel );
-
-	}
-
-
 	integrate();
 
-	for ( let i = 0; i < 1; i++ ) {
+	for ( let i = 0; i < 40; i++ ) {
+
+		if ( MOUSE.update() ) mouseOffset();
 
 		for ( let j = 0; j < 8; j++ ) {
 
-			solveConstraint( j );
+			const k = ( i & 1 == 0 ) ? j : 7-j;
+
+			solveConstraints( k );
 
 		}
 
