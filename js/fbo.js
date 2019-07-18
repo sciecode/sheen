@@ -49,7 +49,8 @@ const tSize = new THREE.Vector2(),
 			psel: { value: null },
 			mouse: { type: 'v3' },
 			tSize: { type: 'v2', value: tSize },
-			tOriginal: { type: 't' }
+			tOriginal: { type: 't' },
+			tPosition: { type: 't' },
 		},
 		vertexShader: through_vert,
 		fragmentShader: mouse_frag,
@@ -247,6 +248,7 @@ function mouseOffset() {
 	mouseShader.uniforms.psel.value = MOUSE.psel;
 	mouseShader.uniforms.mouse.value = MOUSE.mouse3d;
 	mouseShader.uniforms.tOriginal.value = originalRT.texture;
+	mouseShader.uniforms.tPosition.value = positionRT.texture;
 
 	renderer.setRenderTarget( targetRT );
 	renderer.render( scene, camera );
@@ -261,7 +263,7 @@ function update() {
 
 	integrate();
 
-	for ( let i = 0; i < 40; i++ ) {
+	for ( let i = 0; i < 12; i++ ) {
 
 		if ( MOUSE.update() ) mouseOffset();
 
@@ -269,7 +271,7 @@ function update() {
 
 			const k = ( i & 1 == 0 ) ? j : 7-j;
 
-			solveConstraints( k );
+			solveConstraints( j );
 
 		}
 

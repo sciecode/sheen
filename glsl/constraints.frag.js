@@ -56,10 +56,9 @@ void main() {
 
 	if ( id == -1.0 ) diff = 0.0;
 
-	vec3 newPos = posA;
-	newPos -= offCur * diff * 1.0;
+	posA -= offCur * diff * 0.76;
 
-	gl_FragColor = vec4( newPos, 1.0 );
+	gl_FragColor = vec4( posA, 1.0 );
 
 }
 `;
