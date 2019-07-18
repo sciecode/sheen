@@ -4,7 +4,7 @@ import through_frag from '../glsl/through.frag.js';
 import integrate_frag from '../glsl/integrate.frag.js';
 import constraint_frag from '../glsl/constraint.frag.js';
 
-let RESOLUTION,
+let RESOLUTION, MOUSE,
 	renderer, mesh,
 	originalRT, previousRT, positionRT, targetRT,
 	constraintRTs;
@@ -72,11 +72,12 @@ const tSize = new THREE.Vector2(),
 		depthTest: false
 	} );
 
-function init( WebGLRenderer, vertices, particles ) {
+function init( WebGLRenderer, vertices, particles, mouse ) {
 
 	// setup
 	renderer = WebGLRenderer;
 
+	MOUSE = mouse;
 	RESOLUTION = Math.ceil( Math.sqrt( vertices.count ) );
 	tSize.set( RESOLUTION, RESOLUTION );
 
@@ -239,9 +240,18 @@ function solveConstraint( offset ) {
 
 function update() {
 
+	const interacting = MOUSE.update();
+
+	if ( interacting ) {
+
+		console.log( MOUSE.mouse3d, MOUSE.psel );
+
+	}
+
+
 	integrate();
 
-	for ( let i = 0; i < 80; i++ ) {
+	for ( let i = 0; i < 1; i++ ) {
 
 		for ( let j = 0; j < 8; j++ ) {
 

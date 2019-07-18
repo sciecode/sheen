@@ -1,5 +1,6 @@
 import * as FBO from './fbo.js';
 import * as CLOTH from './cloth.js';
+import * as MOUSE from './mouse.js';
 
 var steps = 12;
 var stiffness = 0.76;
@@ -18,13 +19,7 @@ psel = undefined;
 const particles = [],
 constraints = [],
 
-v0 = new THREE.Vector3(),
-mouse = new THREE.Vector2(),
-tmpmouse = new THREE.Vector3(),
-mouse3d = new THREE.Vector3(),
-normal = new THREE.Vector3(),
-raycaster = new THREE.Raycaster(),
-plane = new THREE.Plane( undefined, -180 );
+v0 = new THREE.Vector3();
 
 init();
 
@@ -115,7 +110,9 @@ function init() {
 
 	createParticles( geometry );
 
-	FBO.init( renderer, position, particles );
+	MOUSE.init( particles, camera );
+
+	FBO.init( renderer, position, particles, MOUSE );
 
 	CLOTH.init( geometry );
 	scene.add( CLOTH.mesh );
@@ -238,63 +235,7 @@ function updateCloth() {
 
 }
 
-function updateMouse() {
-
-	if ( ! interacting ) return;
-
-	raycaster.setFromCamera( mouse, camera );
-	var intersects = raycaster.intersectObject( mesh );
-
-	if ( intersects.length != 0 ) {
-
-		mouse3d.copy( intersects[0].point );
-
-		if ( psel == undefined ) {
-
-			dist = Infinity;
-			for ( i = 0; i < particles.length; i++ ) {
-
-				tmp = mouse3d.distanceTo( particles[i].position );
-
-				if ( tmp < dist ) {
-					dist = tmp;
-					psel = i;
-				}
-
-			}
-
-			for ( i = 0; i < particles.length; i++ ) {
-
-				particles[i].distance = particles[ psel ].original.distanceTo( particles[i].original );
-
-			}
-
-		}
-
-	}
-
-	plane.normal.copy( camera.position ).normalize();
-	raycaster.ray.intersectPlane( plane, tmpmouse );
-
-	if ( tmpmouse != null ) {
-
-		mouse3d.copy( tmpmouse );
-
-	}
-
-}
-
 function simulate( ) {
-
-	let il = particles.length;
-
-	for ( let i = 0; i < il; i++ ) {
-
-		particles[ i ].integrate( TIMESTEP_SQ );
-
-	}
-
-	il = constraints.length;
 
 	for ( let j = 0; j < steps; j++ ) {
 
@@ -317,58 +258,6 @@ function simulate( ) {
 			}
 
 		}
-
-		for ( let i = il-1; i >= 0; i-- ) {
-
-			constraint = constraints[ i ];
-			satisfyConstraints( constraint[ 0 ], constraint[ 1 ], constraint[ 2 ] );
-
-		}
-
-		for ( let  i = 0; i < il; i ++ ) {
-
-			constraint = constraints[ i ];
-			satisfyConstraints( constraint[ 0 ], constraint[ 1 ], constraint[ 2 ] );
-
-		}
-
-	}
-
-}
-
-function satisfyConstraints( p1, p2, distSq ) {
-
-	v0.subVectors( p2.position, p1.position );
-
-	const curDist = Math.max( distSq * cutoff, v0.lengthSq() );
-	const diff = distSq / ( curDist + distSq ) - 0.5;
-
-	v0.multiplyScalar( diff * stiffness );
-
-	p1.position.sub( v0 );
-	p2.position.add( v0 );
-
-}
-
-window.onmousemove = function(evt) {
-
-	mouse.x = (evt.pageX / window.innerWidth) * 2 - 1;
-	mouse.y = -(evt.pageY / window.innerHeight) * 2 + 1;
-
-}
-
-window.onmousedown = function(evt) {
-
-	if (evt.button == 0)
-		interacting = true;
-}
-
-window.onmouseup = function(evt) {
-
-	if ( evt.button == 0 ) {
-
-		interacting = false;
-		psel = undefined;
 
 	}
 
