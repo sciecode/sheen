@@ -1,14 +1,18 @@
 // shader-import-block
 import through_vert from '../glsl/through.vert.js';
-import through_frag from '../glsl/through.frag.js';
-import mouse_frag from '../glsl/mouse.frag.js';
-import integrate_frag from '../glsl/integrate.frag.js';
+
 import constraints_frag from '../glsl/constraints.frag.js';
+import integrate_frag from '../glsl/integrate.frag.js';
+import mouse_frag from '../glsl/mouse.frag.js';
+import normals_frag from '../glsl/normals.frag.js';
+import through_frag from '../glsl/through.frag.js';
+
 
 let RESOLUTION, MOUSE,
 	renderer, mesh,
-	originalRT, previousRT, positionRT, targetRT,
-	constraintRTs, normalsRTs;
+	originalRT, previousRT, positionRT,
+	targetRT, normalsRT,
+	constraints, faces;
 
 // setup
 const tSize = new THREE.Vector2(),
@@ -74,6 +78,22 @@ const tSize = new THREE.Vector2(),
 		lights: false,
 		depthWrite: false,
 		depthTest: false
+	} ),
+
+	normalsShader = new THREE.RawShaderMaterial( {
+		uniforms: {
+			tSize: { type: 'v2', value: tSize },
+			tPosition: { type: 't' },
+			tFace1: { type: 't' },
+			tFace2: { type: 't' },
+			tFace3: { type: 't' },
+		},
+		vertexShader: through_vert,
+		fragmentShader: normals_frag,
+		fog: false,
+		lights: false,
+		depthWrite: false,
+		depthTest: false
 	} );
 
 function init( WebGLRenderer, vertices, particles, mouse ) {
@@ -116,6 +136,7 @@ function init( WebGLRenderer, vertices, particles, mouse ) {
 	targetRT = originalRT.clone();
 	previousRT = originalRT.clone();
 	positionRT = originalRT.clone();
+	normalsRT = originalRT.clone();
 
 	// prepare
 
@@ -123,14 +144,14 @@ function init( WebGLRenderer, vertices, particles, mouse ) {
 	copyTexture( originalRT, previousRT );
 	copyTexture( originalRT, positionRT );
 
-	constraintRTs = new Array(2);
-	constraintRTs[0] = createConstraintsTexture( particles, 0 );
-	constraintRTs[1] = createConstraintsTexture( particles, 4 );
+	constraints = new Array(2);
+	constraints[0] = createConstraintsTexture( particles, 0 );
+	constraints[1] = createConstraintsTexture( particles, 4 );
 
-	normalsRTs = new Array(2);
-	normalsRTs[0] = createConstraintsTexture( particles, 0 );
-	normalsRTs[1] = createConstraintsTexture( particles, 2 );
-	normalsRTs[2] = createConstraintsTexture( particles, 4 );
+	faces = new Array(2);
+	faces[0] = createConstraintsTexture( particles, 0 );
+	faces[1] = createConstraintsTexture( particles, 2 );
+	faces[2] = createConstraintsTexture( particles, 4 );
 
 }
 
@@ -260,7 +281,7 @@ function solveConstraints( offset ) {
 	constraintsShader.uniforms.cID.value = cID;
 	constraintsShader.uniforms.tOriginal.value = originalRT.texture;
 	constraintsShader.uniforms.tPosition.value = positionRT.texture;
-	constraintsShader.uniforms.tConstraints.value = constraintRTs[tID].texture;
+	constraintsShader.uniforms.tConstraints.value = constraints[tID].texture;
 
 	renderer.setRenderTarget( targetRT );
 	renderer.render( scene, camera );
@@ -288,6 +309,19 @@ function mouseOffset() {
 
 }
 
+function computevertexNormals() {
+
+	mesh.material = normalsShader;
+	normalsShader.uniforms.tPosition.value = positionRT.texture;
+	normalsShader.uniforms.tFace1.value = faces[0].texture;
+	normalsShader.uniforms.tFace2.value = faces[1].texture;
+	normalsShader.uniforms.tFace3.value = faces[2].texture;
+
+	renderer.setRenderTarget( normalsRT );
+	renderer.render( scene, camera );
+
+}
+
 function update() {
 
 	integrate();
@@ -306,6 +340,8 @@ function update() {
 
 	}
 
+	computevertexNormals();
+
 }
 
-export { init, update, positionRT };
+export { init, update, positionRT, normalsRT };

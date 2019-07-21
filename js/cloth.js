@@ -17,11 +17,12 @@ function init( geo ) {
 
 	material.onBeforeCompile = function ( shader ) {
 		shader.uniforms.tPosition = { value: FBO.positionRT.texture };
-		shader.vertexShader = 'uniform sampler2D tPosition;\n' + shader.vertexShader;
+		shader.uniforms.tNormal = { value: FBO.normalsRT.texture };
+		shader.vertexShader = 'uniform sampler2D tPosition;\nuniform sampler2D tNormal;\n' + shader.vertexShader;
 		shader.vertexShader = shader.vertexShader.replace(
 			'#include <beginnormal_vertex>',
 			`vec3 transformed = texture2D( tPosition, position.xy ).xyz;
-			 vec3 objectNormal = normalize( transformed );
+			 vec3 objectNormal = normalize( texture2D( tNormal, position.xy ).xyz );
 			`
 		);
 		shader.vertexShader = shader.vertexShader.replace(
