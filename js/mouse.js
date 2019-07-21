@@ -18,7 +18,7 @@ function init( verts, cam ) {
 
 }
 
-function update() {
+function updating() {
 
 	if ( ! interacting ) return;
 
@@ -88,4 +88,4 @@ window.onmouseup = function(evt) {
 
 }
 
-export { init, update, mouse3d, psel }
+export { init, updating, mouse3d, psel }

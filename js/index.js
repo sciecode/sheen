@@ -140,6 +140,10 @@ function createParticles( geometry ) {
 		const b = index.getX( i3 + 1 );
 		const c = index.getX( i3 + 2 );
 
+		particles[ a ].faces.push( [ b, c ] );
+		particles[ b ].faces.push( [ c, a ] );
+		particles[ c ].faces.push( [ a, b ] );
+
 		if ( ! particles[ b ].adj.includes( a ) ) {
 
 			const dist = particles[ a ].original.distanceTo( particles[ b ].original );

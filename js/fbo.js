@@ -8,7 +8,7 @@ import constraints_frag from '../glsl/constraints.frag.js';
 let RESOLUTION, MOUSE,
 	renderer, mesh,
 	originalRT, previousRT, positionRT, targetRT,
-	constraintRTs;
+	constraintRTs, normalsRTs;
 
 // setup
 const tSize = new THREE.Vector2(),
@@ -112,24 +112,25 @@ function init( WebGLRenderer, vertices, particles, mouse ) {
 		stencilBuffer: false
 	} ),
 
-	constraintRTs = new Array(2);
+
 	targetRT = originalRT.clone();
 	previousRT = originalRT.clone();
 	positionRT = originalRT.clone();
 
-	constraintRTs[0] = originalRT.clone();
-	constraintRTs[1] = originalRT.clone();
-
-	constraintRTs[0].texture.format = THREE.RGBAFormat;
-	constraintRTs[1].texture.format = THREE.RGBAFormat;
-
 	// prepare
+
 	copyTexture( createPositionTexture( vertices ), originalRT );
 	copyTexture( originalRT, previousRT );
 	copyTexture( originalRT, positionRT );
 
-	copyTexture( createConstraintsTexture( particles, 0 ), constraintRTs[0] );
-	copyTexture( createConstraintsTexture( particles, 4 ), constraintRTs[1] );
+	constraintRTs = new Array(2);
+	constraintRTs[0] = createConstraintsTexture( particles, 0 );
+	constraintRTs[1] = createConstraintsTexture( particles, 4 );
+
+	normalsRTs = new Array(2);
+	normalsRTs[0] = createConstraintsTexture( particles, 0 );
+	normalsRTs[1] = createConstraintsTexture( particles, 2 );
+	normalsRTs[2] = createConstraintsTexture( particles, 4 );
 
 }
 
@@ -205,6 +206,34 @@ function createConstraintsTexture( particles, k ) {
 
 }
 
+function createFacesTexture( particles, k ) {
+
+	const data = new Float32Array( RESOLUTION * RESOLUTION * 4 );
+	const length = particles.length;
+
+	for ( let i = 0; i < length; i++ ) {
+
+		const i4 = i * 4;
+
+		data[ i4 + 0 ] = ( particles[i].faces[ k + 0 ] === undefined ) ? -1 : particles[i].faces[ k + 0 ][0];
+		data[ i4 + 1 ] = ( particles[i].faces[ k + 0 ] === undefined ) ? -1 : particles[i].faces[ k + 0 ][1];
+		data[ i4 + 2 ] = ( particles[i].faces[ k + 1 ] === undefined ) ? -1 : particles[i].faces[ k + 1 ][0];
+		data[ i4 + 3 ] = ( particles[i].faces[ k + 1 ] === undefined ) ? -1 : particles[i].faces[ k + 1 ][1];
+
+	}
+
+	const tmp = {};
+	tmp.texture = new THREE.DataTexture( data, RESOLUTION, RESOLUTION, THREE.RGBAFormat, THREE.FloatType );
+	tmp.texture.minFilter = THREE.NearestFilter;
+	tmp.texture.magFilter = THREE.NearestFilter;
+	tmp.texture.needsUpdate = true;
+	tmp.texture.generateMipmaps = false;
+	tmp.texture.flipY = false;
+
+	return tmp;
+
+}
+
 function integrate() {
 
 	mesh.material = integrateShader;
@@ -265,13 +294,13 @@ function update() {
 
 	for ( let i = 0; i < 12; i++ ) {
 
-		if ( MOUSE.update() ) mouseOffset();
+		if ( MOUSE.updating() ) mouseOffset();
 
 		for ( let j = 0; j < 8; j++ ) {
 
 			const k = ( i & 1 == 0 ) ? j : 7-j;
 
-			solveConstraints( j );
+			solveConstraints( k );
 
 		}
 

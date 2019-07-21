@@ -7,6 +7,7 @@ function Particle ( x, y, z, mass ) {
 
 	this.colors = new Array( 20 ).fill( undefined );
 	this.adj = [];
+	this.faces = [];
 	this.distance = 0;
 
 }
