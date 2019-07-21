@@ -149,9 +149,9 @@ function init( WebGLRenderer, vertices, particles, mouse ) {
 	constraints[1] = createConstraintsTexture( particles, 4 );
 
 	faces = new Array(2);
-	faces[0] = createConstraintsTexture( particles, 0 );
-	faces[1] = createConstraintsTexture( particles, 2 );
-	faces[2] = createConstraintsTexture( particles, 4 );
+	faces[0] = createFacesTexture( particles, 0 );
+	faces[1] = createFacesTexture( particles, 2 );
+	faces[2] = createFacesTexture( particles, 4 );
 
 }
 
@@ -309,7 +309,7 @@ function mouseOffset() {
 
 }
 
-function computevertexNormals() {
+function computeVertexNormals() {
 
 	mesh.material = normalsShader;
 	normalsShader.uniforms.tPosition.value = positionRT.texture;
@@ -340,7 +340,7 @@ function update() {
 
 	}
 
-	computevertexNormals();
+	computeVertexNormals();
 
 }
 

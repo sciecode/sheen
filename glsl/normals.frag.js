@@ -47,7 +47,7 @@ void main() {
 
 	fNormal = cross( ( c - b ), ( a - b ) );
 
-	if ( idB != - 1.0 ) normals += fNormal;
+	if ( idB != -1.0 ) normals += fNormal;
 
 	// face1
 
