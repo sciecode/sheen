@@ -31,6 +31,17 @@ function init( geo ) {
 		);
 	};
 
+	const depthMaterial = new THREE.MeshDepthMaterial();
+	depthMaterial.onBeforeCompile = function ( shader ) {
+		shader.uniforms.tPosition = { value: FBO.positionRT.texture };
+		shader.vertexShader = 'uniform sampler2D tPosition;\n' + shader.vertexShader;
+		shader.vertexShader = shader.vertexShader.replace(
+			'#include <begin_vertex>',
+			`vec3 transformed = texture2D( tPosition, position.xy ).xyz;`
+		);
+	};
+
+
 	const position = new Float32Array( RESOLUTION * RESOLUTION * 3 );
 	for ( let i = 0, il = RESOLUTION * RESOLUTION; i < il; i ++ ) {
 
@@ -45,7 +56,8 @@ function init( geo ) {
 	geometry.addAttribute( 'position', new THREE.BufferAttribute( position, 3 ) );
 
 	mesh = new THREE.Mesh( geometry, material );
-	// mesh.castShadow = true;
+	mesh.customDepthMaterial = depthMaterial;
+	mesh.castShadow = true;
 
 }
 

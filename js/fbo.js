@@ -9,7 +9,7 @@ import through_frag from '../glsl/through.frag.js';
 
 
 let RESOLUTION, MOUSE,
-	renderer, mesh,
+	renderer, mesh, steps = 60,
 	originalRT, previousRT, positionRT,
 	targetRT, normalsRT,
 	constraints, faces;
@@ -122,9 +122,11 @@ function init( WebGLRenderer, vertices, particles, mouse ) {
 
 	// render targets
 	originalRT = new THREE.WebGLRenderTarget( RESOLUTION, RESOLUTION, {
+		wrapS: THREE.ClampToEdgeWrapping,
+		wrapT: THREE.ClampToEdgeWrapping,
 		minFilter: THREE.NearestFilter,
 		magFilter: THREE.NearestFilter,
-		format: THREE.RGBFormat,
+		format: THREE.RGBAFormat,
 		type: THREE.FloatType,
 		depthTest: false,
 		depthWrite: false,
@@ -167,8 +169,7 @@ function copyTexture( input, output ) {
 
 function createPositionTexture( vertices, expand ) {
 
-	const exp = ( expand ) ? 1.5 : 1;
-	const data = new Float32Array( RESOLUTION * RESOLUTION * 3 );
+	const data = new Float32Array( RESOLUTION * RESOLUTION * 4 );
 	const length = vertices.array.length;
 
 	for ( let i = 0; i < RESOLUTION; i++ ) {
@@ -176,19 +177,20 @@ function createPositionTexture( vertices, expand ) {
 		for ( let j = 0; j < RESOLUTION; j++ ) {
 
 			const i3 = i * RESOLUTION * 3 + j * 3;
+			const i4 = i * RESOLUTION * 4 + j * 4;
 
 			if ( i3 >= length ) break;
 
-			data[ i3 + 0 ] = vertices.array[ i3 + 0 ] * exp;
-			data[ i3 + 1 ] = vertices.array[ i3 + 1 ] * exp;
-			data[ i3 + 2 ] = vertices.array[ i3 + 2 ] * exp;
+			data[ i4 + 0 ] = vertices.array[ i3 + 0 ];
+			data[ i4 + 1 ] = vertices.array[ i3 + 1 ];
+			data[ i4 + 2 ] = vertices.array[ i3 + 2 ];
 
 		}
 
 	}
 
 	const tmp = {};
-	tmp.texture = new THREE.DataTexture( data, RESOLUTION, RESOLUTION, THREE.RGBFormat, THREE.FloatType );
+	tmp.texture = new THREE.DataTexture( data, RESOLUTION, RESOLUTION, THREE.RGBAFormat, THREE.FloatType );
 	tmp.texture.minFilter = THREE.NearestFilter;
 	tmp.texture.magFilter = THREE.NearestFilter;
 	tmp.texture.needsUpdate = true;
@@ -326,15 +328,19 @@ function update() {
 
 	integrate();
 
-	for ( let i = 0; i < 12; i++ ) {
+	for ( let i = 0; i < steps; i++ ) {
 
 		if ( MOUSE.updating() ) mouseOffset();
 
 		for ( let j = 0; j < 8; j++ ) {
 
-			const k = ( i & 1 == 0 ) ? j : 7-j;
+			solveConstraints( j );
 
-			solveConstraints( k );
+		}
+
+		for ( let j = 7; j >= 0; j-- ) {
+
+			solveConstraints( j );
 
 		}
 
