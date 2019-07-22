@@ -12,7 +12,7 @@ let RESOLUTION, MOUSE,
 	renderer, mesh, steps = 60,
 	originalRT, previousRT, positionRT,
 	targetRT, normalsRT,
-	constraints, faces;
+	constraintsRT, facesRT;
 
 // setup
 const tSize = new THREE.Vector2(),
@@ -140,20 +140,27 @@ function init( WebGLRenderer, vertices, particles, mouse ) {
 	positionRT = originalRT.clone();
 	normalsRT = originalRT.clone();
 
+	constraintsRT = new Array(2);
+	constraintsRT[0] = originalRT.clone();
+	constraintsRT[1] = originalRT.clone();
+
+	facesRT = new Array(2);
+	facesRT[0] = originalRT.clone();
+	facesRT[1] = originalRT.clone();
+	facesRT[2] = originalRT.clone();
+
 	// prepare
 
 	copyTexture( createPositionTexture( vertices ), originalRT );
 	copyTexture( originalRT, previousRT );
 	copyTexture( originalRT, positionRT );
 
-	constraints = new Array(2);
-	constraints[0] = createConstraintsTexture( particles, 0 );
-	constraints[1] = createConstraintsTexture( particles, 4 );
+	copyTexture( createConstraintsTexture( particles, 0 ), constraintsRT[0] );
+	copyTexture( createConstraintsTexture( particles, 4 ), constraintsRT[1] );
 
-	faces = new Array(2);
-	faces[0] = createFacesTexture( particles, 0 );
-	faces[1] = createFacesTexture( particles, 2 );
-	faces[2] = createFacesTexture( particles, 4 );
+	copyTexture( createFacesTexture( particles, 0 ), facesRT[0] );
+	copyTexture( createFacesTexture( particles, 2 ), facesRT[1] );
+	copyTexture( createFacesTexture( particles, 4 ), facesRT[2] );
 
 }
 
@@ -283,7 +290,7 @@ function solveConstraints( offset ) {
 	constraintsShader.uniforms.cID.value = cID;
 	constraintsShader.uniforms.tOriginal.value = originalRT.texture;
 	constraintsShader.uniforms.tPosition.value = positionRT.texture;
-	constraintsShader.uniforms.tConstraints.value = constraints[tID].texture;
+	constraintsShader.uniforms.tConstraints.value = constraintsRT[tID].texture;
 
 	renderer.setRenderTarget( targetRT );
 	renderer.render( scene, camera );
@@ -315,9 +322,9 @@ function computeVertexNormals() {
 
 	mesh.material = normalsShader;
 	normalsShader.uniforms.tPosition.value = positionRT.texture;
-	normalsShader.uniforms.tFace1.value = faces[0].texture;
-	normalsShader.uniforms.tFace2.value = faces[1].texture;
-	normalsShader.uniforms.tFace3.value = faces[2].texture;
+	normalsShader.uniforms.tFace1.value = facesRT[0].texture;
+	normalsShader.uniforms.tFace2.value = facesRT[1].texture;
+	normalsShader.uniforms.tFace3.value = facesRT[2].texture;
 
 	renderer.setRenderTarget( normalsRT );
 	renderer.render( scene, camera );

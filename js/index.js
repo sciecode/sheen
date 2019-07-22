@@ -17,7 +17,6 @@ init();
 function init() {
 
 	// core
-
 	renderer = new THREE.WebGLRenderer( { antialias: true } );
 	renderer.setSize( window.innerWidth, window.innerHeight );
 	renderer.setPixelRatio( window.devicePixelRatio );
@@ -27,8 +26,6 @@ function init() {
 
 	renderer.shadowMap.enabled = true;
 	renderer.shadowMap.type = THREE.PCFShadowMap;
-
-	renderer.debug.checkShaderErrors = true;
 
 	document.body.appendChild( renderer.domElement );
 
