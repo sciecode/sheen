@@ -8,11 +8,14 @@ function init( geo ) {
 	RESOLUTION = Math.ceil( Math.sqrt( geo.attributes.position.count ) );
 
 	const material = new THREE.MeshPhysicalMaterial( {
+
 		color: 0xffda20,
 		metalness: 0.1,
 		roughness: 0.5,
 		clearCoat: 0.8,
-		clearCoatRoughness: 0.3
+		clearCoatRoughness: 0.3,
+		dithering: true
+
 	} );
 
 	material.onBeforeCompile = function ( shader ) {
