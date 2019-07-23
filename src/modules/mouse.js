@@ -1,14 +1,16 @@
 
-let interacting = false,
-	psel = undefined,
-	camera, object, particles;
+let
+camera, object, particles,
+interacting = false,
+psel = undefined;
 
-const mouse = new THREE.Vector2(),
-	tmpmouse = new THREE.Vector3(),
-	mouse3d = new THREE.Vector3(),
-	raycaster = new THREE.Raycaster(),
-	plane = new THREE.Plane( undefined, -180 ),
-	sphere = new THREE.Sphere( undefined, 100 );
+const
+mouse = new THREE.Vector2(),
+tmpmouse = new THREE.Vector3(),
+mouse3d = new THREE.Vector3(),
+raycaster = new THREE.Raycaster(),
+plane = new THREE.Plane( undefined, -180 ),
+sphere = new THREE.Sphere( undefined, 100 );
 
 
 function init( verts, cam ) {

@@ -1,19 +1,19 @@
-import * as FBO from './fbo.js';
-import * as CLOTH from './cloth.js';
-import * as MOUSE from './mouse.js';
+import * as FBO from './modules/fbo.js';
+import * as CLOTH from './modules/cloth.js';
+import * as MOUSE from './modules/mouse.js';
 
-let renderer, camera, scene,
+let
+renderer, camera, scene,
 mesh, stats, lights,
-position, interacting = false,
+position,
+interacting = false,
 psel = undefined,
 clock = new THREE.Clock();
 
-const particles = [],
+const
+particles = [],
 constraints = [],
-
 v0 = new THREE.Vector3();
-
-init();
 
 function init() {
 
@@ -238,3 +238,5 @@ window.onresize = function() {
 	renderer.setSize( w, h );
 
 };
+
+init();

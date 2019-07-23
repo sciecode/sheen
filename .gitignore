@@ -1,0 +1,6 @@
+.DS_Store
+.DS_Store?
+/node_modules
+.eslintignore
+*.js.map
+dev.html
