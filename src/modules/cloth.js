@@ -1,7 +1,8 @@
 import * as FBO from './fbo.js';
 
-let RESOLUTION,
-	mesh;
+let
+RESOLUTION,
+mesh;
 
 function init( geo ) {
 
