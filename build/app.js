@@ -1,6 +1,28 @@
 (function () {
 	'use strict';
 
+	function init( scene ) {
+
+		const material = new THREE.MeshPhysicalMaterial( {
+
+			color: 0x393939,
+			metalness: 0.9,
+			roughness: 0.4,
+			dithering: true
+
+		} );
+
+		const geometry = new THREE.PlaneBufferGeometry( 16000, 16000 );
+
+		const object = new THREE.Mesh( geometry, material );
+		object.receiveShadow = true;
+		object.rotation.x += Math.PI * 0.9;
+		object.position.set( 0, -100, 2000 );
+
+		scene.add( object );
+
+	}
+
 	var through_vert = /* glsl */`
 precision highp float;
 
@@ -362,7 +384,7 @@ void main() {
 	scene = new THREE.Scene(),
 	camera = new THREE.Camera();
 
-	function init( WebGLRenderer, vertices, particles, mouse ) {
+	function init$1( WebGLRenderer, vertices, particles, mouse ) {
 
 		// setup
 		renderer = WebGLRenderer;
@@ -629,7 +651,7 @@ void main() {
 	RESOLUTION$1,
 	mesh$1;
 
-	function init$1( geo ) {
+	function init$2( scene, geo ) {
 
 		RESOLUTION$1 = Math.ceil( Math.sqrt( geo.attributes.position.count ) );
 
@@ -688,6 +710,69 @@ void main() {
 		mesh$1.customDepthMaterial = depthMaterial;
 		mesh$1.castShadow = true;
 
+		scene.add( mesh$1 );
+
+	}
+
+	let
+	objects;
+
+	const
+	clock = new THREE.Clock();
+
+	function init$3( scene ) {
+
+		// lights
+		const light = new THREE.AmbientLight( 0x455045, 0 );
+
+		const spotLight = new THREE.SpotLight( 0xfd8b8b, 0, 4000, Math.PI/6, 0.2, 0.11 );
+		spotLight.position.set( 0.9, 0.1, -0.5 ).multiplyScalar( 400 );
+		spotLight.castShadow = true;
+		spotLight.shadow.radius = 20;
+		spotLight.shadow.camera.far = 4000;
+		spotLight.shadow.mapSize.height = 4096;
+		spotLight.shadow.mapSize.width = 4096;
+
+		const spotLight2 = new THREE.SpotLight( 0x6b7af4, 0, 4000, Math.PI/6, 0.2, 0.11 );
+		spotLight2.position.set( -0.91, 0.1, -0.5 ).multiplyScalar( 400 );
+		spotLight2.castShadow = true;
+		spotLight2.shadow.radius = 20;
+		spotLight2.shadow.camera.far = 4000;
+		spotLight2.shadow.mapSize.height = 4096;
+		spotLight2.shadow.mapSize.width = 4096;
+
+		const spotLight3 = new THREE.SpotLight( 0x858585, 0, 4000, Math.PI/5.5, 1.4, 0.02 );
+		spotLight3.position.set( 0, 0, -1 ).multiplyScalar( 400 );
+		spotLight3.castShadow = true;
+		spotLight3.shadow.radius = 5;
+		spotLight3.shadow.camera.far = 4000;
+		spotLight3.shadow.mapSize.height = 4096;
+		spotLight3.shadow.mapSize.width = 4096;
+
+		scene.add( light, spotLight, spotLight2, spotLight3 );
+		objects = [ light, spotLight, spotLight2, spotLight3 ];
+
+	}
+
+	function update$1( ) {
+
+		function easing( t, c ) {
+			if ((t/=1/2) < 1) return c/2*t*t*t;
+			return c/2*((t-=2)*t*t + 2);
+		}
+
+		const time = clock.getElapsedTime();
+
+		if ( time > 1 && time < 4 ) {
+
+			for ( let i = 0; i < objects.length; i++ ) {
+
+				objects[i].intensity = easing( ( time - 1 ) / 3, 2.6 );
+
+			}
+
+		}
+
 	}
 
 	let 
@@ -704,7 +789,7 @@ void main() {
 	sphere = new THREE.Sphere( undefined, 100 );
 
 
-	function init$2( verts, cam ) {
+	function init$4( verts, cam ) {
 
 		particles = verts;
 		camera$1 = cam;
@@ -782,7 +867,7 @@ void main() {
 	};
 
 	var MOUSE$1 = /*#__PURE__*/Object.freeze({
-		init: init$2,
+		init: init$4,
 		updating: updating,
 		mouse3d: mouse3d,
 		get psel () { return psel; }
@@ -790,18 +875,16 @@ void main() {
 
 	let 
 	renderer$1, camera$2, scene$1,
-	lights,
-	position,
-	clock = new THREE.Clock();
+	position;
 
 	const
 	particles$1 = [],
 	constraints = [],
 	v0 = new THREE.Vector3();
 
-	function init$3() {
+	function init$5() {
 
-		// core
+		// renderer
 		renderer$1 = new THREE.WebGLRenderer( { antialias: true } );
 		renderer$1.setSize( window.innerWidth, window.innerHeight );
 		renderer$1.setPixelRatio( window.devicePixelRatio );
@@ -814,66 +897,16 @@ void main() {
 
 		document.body.appendChild( renderer$1.domElement );
 
+		// scene
 		scene$1 = new THREE.Scene();
-		renderer$1.setClearColor( 0x121312 );
+		scene$1.background = new THREE.Color( 0x121312 );
 
+		// camera
 		camera$2 = new THREE.PerspectiveCamera( 60, window.innerWidth/window.innerHeight, 1, 10000 );
 		camera$2.position.z = -350;
 		camera$2.position.y = -50;
 		camera$2.position.x = 0;
-
 		camera$2.lookAt( new THREE.Vector3() );
-
-		// lights
-		const light = new THREE.AmbientLight( 0x455045, 0 );
-		scene$1.add( light );
-
-		const spotLight = new THREE.SpotLight( 0xfd8b8b, 0, 4000, Math.PI/6, 0.2, 0.11 );
-		spotLight.position.set( 0.9, 0.1, -0.5 ).multiplyScalar( 400 );
-		spotLight.castShadow = true;
-		spotLight.shadow.radius = 20;
-		spotLight.shadow.camera.far = 4000;
-		spotLight.shadow.mapSize.height = 4096;
-		spotLight.shadow.mapSize.width = 4096;
-		scene$1.add( spotLight );
-
-		const spotLight2 = new THREE.SpotLight( 0x6b7af4, 0, 4000, Math.PI/6, 0.2, 0.11 );
-		spotLight2.position.set( -0.91, 0.1, -0.5 ).multiplyScalar( 400 );
-		spotLight2.castShadow = true;
-		spotLight2.shadow.radius = 20;
-		spotLight2.shadow.camera.far = 4000;
-		spotLight2.shadow.mapSize.height = 4096;
-		spotLight2.shadow.mapSize.width = 4096;
-		scene$1.add( spotLight2 );
-
-		const spotLight3 = new THREE.SpotLight( 0x858585, 0, 4000, Math.PI/5.5, 1.4, 0.02 );
-		spotLight3.position.set( 0, 0, -1 ).multiplyScalar( 400 );
-		spotLight3.castShadow = true;
-		spotLight3.shadow.radius = 5;
-		spotLight3.shadow.camera.far = 4000;
-		spotLight3.shadow.mapSize.height = 4096;
-		spotLight3.shadow.mapSize.width = 4096;
-		scene$1.add( spotLight3 );
-
-		lights = [ light, spotLight, spotLight2, spotLight3 ];
-
-		// scene
-		const bgMaterial = new THREE.MeshPhysicalMaterial( {
-
-			color: 0x393939,
-			metalness: 0.9,
-			roughness: 0.4,
-			dithering: true
-
-		} );
-
-		const bgGeometry = new THREE.PlaneBufferGeometry( 16000, 16000 );
-
-		const bg = new THREE.Mesh( bgGeometry, bgMaterial );
-		scene$1.add( bg );
-		bg.receiveShadow = true;
-		bg.rotation.x += Math.PI * 0.9;
-		bg.position.set( 0, -100, 2000 );
 
 		const ico = new THREE.IcosahedronBufferGeometry( 100, 5 );
 		const geometry = THREE.BufferGeometryUtils.mergeVertices( ico, 1.5 );
@@ -881,12 +914,13 @@ void main() {
 
 		createParticles( geometry );
 
-		init$2( particles$1, camera$2 );
+		// initialization block;
+		init( scene$1 );
+		init$3( scene$1 );
+		init$2( scene$1, geometry );
 
-		init( renderer$1, position, particles$1, MOUSE$1 );
-
-		init$1( geometry );
-		scene$1.add( mesh$1 );
+		init$4( particles$1, camera$2 );
+		init$1( renderer$1, position, particles$1, MOUSE$1 );
 
 		animate();
 
@@ -975,41 +1009,17 @@ void main() {
 
 	}
 
-	function updateLights() {
-
-		function easing( t, c ) {
-		if ((t/=1/2) < 1) return c/2*t*t*t;
-		return c/2*((t-=2)*t*t + 2);
-	}
-
-		const time = clock.getElapsedTime();
-
-		if ( time > 1 && time < 4 ) {
-
-			for ( let i = 0; i < lights.length; i++ ) {
-
-				lights[i].intensity = easing( ( time - 1 ) / 3, 2.6 );
-
-			}
-
-		}
-
-
-	}
-
 	function animate() {
 
 		const t = requestAnimationFrame( animate );
 
-		updateLights();
-
+		update$1();
 		update();
 
 		renderer$1.setRenderTarget( null );
 		renderer$1.render( scene$1, camera$2 );
 
 	}
-
 
 	window.onresize = function() {
 
@@ -1023,6 +1033,6 @@ void main() {
 
 	};
 
-	init$3();
+	init$5();
 
 }());

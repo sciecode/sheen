@@ -4,7 +4,7 @@ let
 RESOLUTION,
 mesh;
 
-function init( geo ) {
+function init( scene, geo ) {
 
 	RESOLUTION = Math.ceil( Math.sqrt( geo.attributes.position.count ) );
 
@@ -62,6 +62,8 @@ function init( geo ) {
 	mesh = new THREE.Mesh( geometry, material );
 	mesh.customDepthMaterial = depthMaterial;
 	mesh.castShadow = true;
+
+	scene.add( mesh );
 
 }
 
