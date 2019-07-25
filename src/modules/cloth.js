@@ -1,12 +1,13 @@
+import * as PRE from './pre.js';
 import * as FBO from './fbo.js';
 
 let
 RESOLUTION,
 mesh;
 
-function init( scene, geo ) {
+function init( scene ) {
 
-	RESOLUTION = Math.ceil( Math.sqrt( geo.attributes.position.count ) );
+	RESOLUTION = Math.ceil( Math.sqrt( PRE.vertices.length ) );
 
 	const material = new THREE.MeshPhysicalMaterial( {
 
@@ -56,7 +57,7 @@ function init( scene, geo ) {
 	}
 
 	const geometry = new THREE.BufferGeometry();
-	geometry.setIndex( geo.index );
+	geometry.setIndex( PRE.geometry.index );
 	geometry.addAttribute( 'position', new THREE.BufferAttribute( position, 3 ) );
 
 	mesh = new THREE.Mesh( geometry, material );

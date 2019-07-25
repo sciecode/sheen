@@ -1,3 +1,6 @@
+import * as PRE from './pre.js';
+import * as MOUSE from './mouse.js';
+
 import {
 	constraintsShader,
 	copyShader,
@@ -7,11 +10,11 @@ import {
 } from './materials.js';
 
 let
-RESOLUTION, MOUSE,
+RESOLUTION,
 renderer, mesh, targetRT, normalsRT,
 originalRT, previousRT, positionRT,
 constraintsRT, facesRT,
-steps = 60;
+steps = 40;
 
 // setup
 const
@@ -19,13 +22,12 @@ tSize = new THREE.Vector2(),
 scene = new THREE.Scene(),
 camera = new THREE.Camera();
 
-function init( WebGLRenderer, vertices, particles, mouse ) {
+function init( WebGLRenderer ) {
 
 	// setup
 	renderer = WebGLRenderer;
 
-	MOUSE = mouse;
-	RESOLUTION = Math.ceil( Math.sqrt( vertices.count ) );
+	RESOLUTION = Math.ceil( Math.sqrt( PRE.vertices.length ) );
 	tSize.set( RESOLUTION, RESOLUTION );
 
 	// geometry
@@ -54,16 +56,16 @@ function init( WebGLRenderer, vertices, particles, mouse ) {
 	facesRT = Array.from( { length: 3 }, createRenderTarget );
 
 	// prepare
-	copyTexture( createPositionTexture( vertices ), originalRT );
+	copyTexture( createPositionTexture( ), originalRT );
 	copyTexture( originalRT, previousRT );
 	copyTexture( originalRT, positionRT );
 
-	copyTexture( createConstraintsTexture( particles, 0 ), constraintsRT[0] );
-	copyTexture( createConstraintsTexture( particles, 4 ), constraintsRT[1] );
+	copyTexture( createConstraintsTexture( 0 ), constraintsRT[0] );
+	copyTexture( createConstraintsTexture( 4 ), constraintsRT[1] );
 
-	copyTexture( createFacesTexture( particles, 0 ), facesRT[0] );
-	copyTexture( createFacesTexture( particles, 2 ), facesRT[1] );
-	copyTexture( createFacesTexture( particles, 4 ), facesRT[2] );
+	copyTexture( createFacesTexture( 0 ), facesRT[0] );
+	copyTexture( createFacesTexture( 2 ), facesRT[1] );
+	copyTexture( createFacesTexture( 4 ), facesRT[2] );
 
 }
 
@@ -95,25 +97,18 @@ function createRenderTarget( ) {
 
 }
 
-function createPositionTexture( vertices, expand ) {
+function createPositionTexture( ) {
 
 	const data = new Float32Array( RESOLUTION * RESOLUTION * 4 );
-	const length = vertices.array.length;
+	const length = PRE.vertices.length;
 
-	for ( let i = 0; i < RESOLUTION; i++ ) {
+	for ( let i = 0; i < length; i++ ) {
 
-		for ( let j = 0; j < RESOLUTION; j++ ) {
+		const i4 = i * 4;
 
-			const i3 = i * RESOLUTION * 3 + j * 3;
-			const i4 = i * RESOLUTION * 4 + j * 4;
-
-			if ( i3 >= length ) break;
-
-			data[ i4 + 0 ] = vertices.array[ i3 + 0 ];
-			data[ i4 + 1 ] = vertices.array[ i3 + 1 ];
-			data[ i4 + 2 ] = vertices.array[ i3 + 2 ];
-
-		}
+		data[ i4 + 0 ] = PRE.vertices[ i ].x;
+		data[ i4 + 1 ] = PRE.vertices[ i ].y;
+		data[ i4 + 2 ] = PRE.vertices[ i ].z;
 
 	}
 
@@ -129,19 +124,19 @@ function createPositionTexture( vertices, expand ) {
 
 }
 
-function createConstraintsTexture( particles, k ) {
+function createConstraintsTexture( k ) {
 
 	const data = new Float32Array( RESOLUTION * RESOLUTION * 4 );
-	const length = particles.length;
+	const length = PRE.vertices.length;
 
 	for ( let i = 0; i < length; i++ ) {
 
 		const i4 = i * 4;
 
-		data[ i4 + 0 ] = ( particles[i].colors[ k + 0 ] === undefined ) ? -1 : particles[i].colors[ k + 0 ];
-		data[ i4 + 1 ] = ( particles[i].colors[ k + 1 ] === undefined ) ? -1 : particles[i].colors[ k + 1 ];
-		data[ i4 + 2 ] = ( particles[i].colors[ k + 2 ] === undefined ) ? -1 : particles[i].colors[ k + 2 ];
-		data[ i4 + 3 ] = ( particles[i].colors[ k + 3 ] === undefined ) ? -1 : particles[i].colors[ k + 3 ];
+		data[ i4 + 0 ] = ( PRE.colors[ i ][ k + 0 ] === undefined ) ? -1 : PRE.colors[ i ][ k + 0 ];
+		data[ i4 + 1 ] = ( PRE.colors[ i ][ k + 1 ] === undefined ) ? -1 : PRE.colors[ i ][ k + 1 ];
+		data[ i4 + 2 ] = ( PRE.colors[ i ][ k + 2 ] === undefined ) ? -1 : PRE.colors[ i ][ k + 2 ];
+		data[ i4 + 3 ] = ( PRE.colors[ i ][ k + 3 ] === undefined ) ? -1 : PRE.colors[ i ][ k + 3 ];
 
 	}
 
@@ -157,19 +152,19 @@ function createConstraintsTexture( particles, k ) {
 
 }
 
-function createFacesTexture( particles, k ) {
+function createFacesTexture( k ) {
 
 	const data = new Float32Array( RESOLUTION * RESOLUTION * 4 );
-	const length = particles.length;
+	const length = PRE.vertices.length;
 
 	for ( let i = 0; i < length; i++ ) {
 
 		const i4 = i * 4;
 
-		data[ i4 + 0 ] = ( particles[i].faces[ k + 0 ] === undefined ) ? -1 : particles[i].faces[ k + 0 ][0];
-		data[ i4 + 1 ] = ( particles[i].faces[ k + 0 ] === undefined ) ? -1 : particles[i].faces[ k + 0 ][1];
-		data[ i4 + 2 ] = ( particles[i].faces[ k + 1 ] === undefined ) ? -1 : particles[i].faces[ k + 1 ][0];
-		data[ i4 + 3 ] = ( particles[i].faces[ k + 1 ] === undefined ) ? -1 : particles[i].faces[ k + 1 ][1];
+		data[ i4 + 0 ] = ( PRE.faces[ i ][ k + 0 ] === undefined ) ? -1 : PRE.faces[ i ][ k + 0 ][0];
+		data[ i4 + 1 ] = ( PRE.faces[ i ][ k + 0 ] === undefined ) ? -1 : PRE.faces[ i ][ k + 0 ][1];
+		data[ i4 + 2 ] = ( PRE.faces[ i ][ k + 1 ] === undefined ) ? -1 : PRE.faces[ i ][ k + 1 ][0];
+		data[ i4 + 3 ] = ( PRE.faces[ i ][ k + 1 ] === undefined ) ? -1 : PRE.faces[ i ][ k + 1 ][1];
 
 	}
 

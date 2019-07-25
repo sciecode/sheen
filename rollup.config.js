@@ -2,7 +2,7 @@ export default {
 	input: 'src/main.js',
 	output: [
 		{
-			format: 'iife',
+			format: 'esm',
 			file: 'build/app.js',
 			indent: '\t'
 		},
