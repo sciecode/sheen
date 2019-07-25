@@ -1,2 +1,1 @@
 var THREE;
-var Particle;
