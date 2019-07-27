@@ -1027,6 +1027,7 @@ function init$5() {
 	// release mem for GC
 	dispose();
 
+	// start program
 	animate();
 
 }

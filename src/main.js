@@ -48,6 +48,7 @@ function init() {
 	// release mem for GC
 	PRE.dispose();
 
+	// start program
 	animate();
 
 }
