@@ -11,11 +11,15 @@ function init( scene ) {
 
 	RESOLUTION = Math.ceil( Math.sqrt( PRE.vertices.length ) );
 
-	const texture = new THREE.TextureLoader().load( 'https://threejs.org/examples/textures/UV_Grid_Sm.jpg');
+	const tl = new THREE.TextureLoader();
+
+	const bmp = tl.load( '../../assets/Leather_007_DISP.PNG');
 
 	const material = new THREE.MeshPhysicalMaterial( {
 
 		color: 0xffda20,
+		bumpMap: bmp,
+		bumpScale: 0.35,
 		metalness: 0.1,
 		roughness: 0.6,
 		clearCoat: 0.8,
