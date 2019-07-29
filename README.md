@@ -1,4 +1,4 @@
-[![Sheen](./assets/images/logo.png)](https://sciecode.github.io/Sheen)
+<a href="https://sciecode.github.io/Sheen"><img src="https://sciecode.github.io/assets/images/sheen.png" width="300" height="300"/></a>
 
 ## Build
 
