@@ -1056,7 +1056,7 @@ function init$3( scene ) {
 
 	const tl = new THREE.TextureLoader();
 
-	const bmp = tl.load( '../../assets/bmpMap.png' );
+	const bmp = tl.load( './src/textures/bmpMap.png' );
 
 	const material = new THREE.MeshPhysicalMaterial( {
 
