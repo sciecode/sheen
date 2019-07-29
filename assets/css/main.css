@@ -2,8 +2,6 @@
 @import url('https://fonts.googleapis.com/css?family=Open+Sans:600&display=swap');
 
 /* === [GLOBAL] === */
-html { cursor: none; }
-
 body {
 	margin: 0;
 	position: fixed;
