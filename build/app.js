@@ -1062,7 +1062,7 @@ function init$3( scene ) {
 
 		color: 0xffda20,
 		bumpMap: bmp,
-		bumpScale: 0.35,
+		bumpScale: 0.25,
 		metalness: 0.1,
 		roughness: 0.6,
 		clearCoat: 0.8,
