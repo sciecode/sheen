@@ -10,7 +10,7 @@
   },
   "author": "sciecode",
   "license": "MIT",
-  "homepage": "sciecode.github.io/Sheen",
+  "homepage": "sciecode.github.io/sheen",
   "devDependencies": {
     "concurrently": "^4.1.1",
     "google-closure-compiler": "20190415.0.0",
