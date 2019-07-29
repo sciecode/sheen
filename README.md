@@ -1,4 +1,4 @@
-<a href="https://sciecode.github.io/Sheen"><img src="./assets/images/logo.png" width="300" height="300"/></a>
+<a href="https://sciecode.github.io/Sheen"><img src="assets/images/logo.png" width="300" height="300"/></a>
 
 ## Build
 
