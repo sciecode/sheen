@@ -257,7 +257,7 @@ function update() {
 
 	for ( let i = 0; i < steps; i++ ) {
 
-		if ( MOUSE.updating() ) mouseOffset();
+		if ( MOUSE.updating() && (i+5) < steps ) mouseOffset();
 
 		for ( let j = 0; j < 8; j++ ) {
 
