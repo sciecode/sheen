@@ -1,5 +1,5 @@
 {
-  "name": "HoonBalloon",
+  "name": "Sheen",
   "version": "0.97.0",
   "description": "GPGPU Cloth Simulation",
   "main": "src/main.js",
@@ -10,7 +10,7 @@
   },
   "author": "sciecode",
   "license": "MIT",
-  "homepage": "sciecode.github.io/HoonBalloon",
+  "homepage": "sciecode.github.io/Sheen",
   "devDependencies": {
     "concurrently": "^4.1.1",
     "google-closure-compiler": "20190415.0.0",
