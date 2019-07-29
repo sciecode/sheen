@@ -14,7 +14,7 @@ RESOLUTION,
 renderer, mesh, targetRT, normalsRT,
 originalRT, previousRT, positionRT,
 constraintsRT, facesRT,
-steps = 40;
+steps = 60;
 
 // setup
 const
@@ -260,12 +260,6 @@ function update() {
 		if ( MOUSE.updating() ) mouseOffset();
 
 		for ( let j = 0; j < 8; j++ ) {
-
-			solveConstraints( j );
-
-		}
-
-		for ( let j = 7; j >= 0; j-- ) {
 
 			solveConstraints( j );
 

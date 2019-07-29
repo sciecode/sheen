@@ -1,6 +1,8 @@
 import * as PRE from './pre.js';
 import * as FBO from './fbo.js';
 
+import physical_frag from '../glsl/physical.frag.js';
+
 let
 RESOLUTION,
 mesh;
@@ -9,13 +11,15 @@ function init( scene ) {
 
 	RESOLUTION = Math.ceil( Math.sqrt( PRE.vertices.length ) );
 
+	const texture = new THREE.TextureLoader().load( 'https://threejs.org/examples/textures/UV_Grid_Sm.jpg');
+
 	const material = new THREE.MeshPhysicalMaterial( {
 
 		color: 0xffda20,
 		metalness: 0.1,
-		roughness: 0.5,
+		roughness: 0.6,
 		clearCoat: 0.8,
-		clearCoatRoughness: 0.3,
+		clearCoatRoughness: 0.35,
 		dithering: true
 
 	} );
@@ -33,6 +37,10 @@ function init( scene ) {
 		shader.vertexShader = shader.vertexShader.replace(
 			'#include <begin_vertex>',
 			''
+		);
+		shader.fragmentShader = shader.fragmentShader.replace(
+			'#include <lights_physical_pars_fragment>',
+			physical_frag
 		);
 	};
 
@@ -59,6 +67,7 @@ function init( scene ) {
 	const geometry = new THREE.BufferGeometry();
 	geometry.setIndex( PRE.geometry.index );
 	geometry.addAttribute( 'position', new THREE.BufferAttribute( position, 3 ) );
+	geometry.addAttribute( 'uv', PRE.geometry.attributes.uv );
 
 	mesh = new THREE.Mesh( geometry, material );
 	mesh.customDepthMaterial = depthMaterial;

@@ -55,7 +55,7 @@ function init() {
 
 function animate() {
 
-	const t = requestAnimationFrame( animate );
+	requestAnimationFrame( animate );
 
 	LIGHTS.update();
 	FBO.update();
