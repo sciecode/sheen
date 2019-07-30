@@ -23,6 +23,7 @@ const copyShader = new THREE.RawShaderMaterial( {
 const integrateShader = copyShader.clone();
 integrateShader.fragmentShader = integrate_frag;
 integrateShader.uniforms = {
+	dt2: { type: 'f' },
 	tSize: { type: 'v2' },
 	tOriginal: { type: 't' },
 	tPrevious: { type: 't' },

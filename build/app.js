@@ -313,14 +313,15 @@ void main() {
 var integrate_frag = /* glsl */`
 precision highp float;
 
+
+uniform float dt2;
 uniform vec2 tSize;
+
 uniform sampler2D tOriginal;
 uniform sampler2D tPrevious;
 uniform sampler2D tPosition;
 
 void main() {
-
-	float dt2 = 0.000256;
 
 	vec2 uv = gl_FragCoord.xy / tSize.xy;
 
@@ -550,6 +551,7 @@ const copyShader = new THREE.RawShaderMaterial( {
 const integrateShader = copyShader.clone();
 integrateShader.fragmentShader = integrate_frag;
 integrateShader.uniforms = {
+	dt2: { type: 'f' },
 	tSize: { type: 'v2' },
 	tOriginal: { type: 't' },
 	tPrevious: { type: 't' },
@@ -597,7 +599,8 @@ steps = 60;
 const
 tSize = new THREE.Vector2(),
 scene = new THREE.Scene(),
-camera$1 = new THREE.Camera();
+camera$1 = new THREE.Camera(),
+clock = new THREE.Clock();
 
 function init$2( WebGLRenderer ) {
 
@@ -759,8 +762,12 @@ function createFacesTexture( k ) {
 
 function integrate() {
 
+	const dt = clock.getDelta();
+	const dt2 = ( dt > 0.016 ) ? 0.016 : dt;
+
 	mesh.material = integrateShader;
 	integrateShader.uniforms.tSize.value = tSize;
+	integrateShader.uniforms.dt2.value = dt2*dt2;
 	integrateShader.uniforms.tOriginal.value = originalRT.texture;
 	integrateShader.uniforms.tPrevious.value = previousRT.texture;
 	integrateShader.uniforms.tPosition.value = positionRT.texture;
@@ -1134,7 +1141,7 @@ let
 objects;
 
 const
-clock = new THREE.Clock();
+clock$1 = new THREE.Clock();
 
 function init$4( scene ) {
 
@@ -1188,7 +1195,7 @@ function update$1( ) {
 		return c/2*((t-=2)*t*t + 2);
 	}
 
-	const time = clock.getElapsedTime();
+	const time = clock$1.getElapsedTime();
 
 	if ( time > 1 && time < 4 ) {
 
