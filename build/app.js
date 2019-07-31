@@ -611,7 +611,7 @@ function createRenderTarget( unsigned ) {
 		minFilter: THREE.NearestFilter,
 		magFilter: THREE.NearestFilter,
 		format: THREE.RGBAFormat,
-		type: ( unsigned ) ? THREE.UnsignedByteType : THREE.HalfFloatType,
+		type: ( unsigned ) ? THREE.UnsignedByteType : THREE.FloatType,
 		depthTest: false,
 		depthWrite: false,
 		depthBuffer: false,
