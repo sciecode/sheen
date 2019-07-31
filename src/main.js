@@ -21,9 +21,6 @@ function init() {
 	renderer.shadowMap.enabled = true;
 	renderer.shadowMap.type = THREE.PCFShadowMap;
 
-	renderer.debug.checkShaderErrors = true;
-	console.log( renderer.capabilities );
-
 	document.body.appendChild( renderer.domElement );
 
 	// scene
@@ -45,7 +42,7 @@ function init() {
 	LIGHTS.init( scene );
 	CLOTH.init( scene );
 
-	MOUSE.init( camera );
+	MOUSE.init( camera, renderer.domElement );
 	FBO.init( renderer );
 
 	// release mem for GC

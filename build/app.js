@@ -1225,9 +1225,6 @@ function init$5() {
 	renderer$1.shadowMap.enabled = true;
 	renderer$1.shadowMap.type = THREE.PCFShadowMap;
 
-	renderer$1.debug.checkShaderErrors = true;
-	console.log( renderer$1.capabilities );
-
 	document.body.appendChild( renderer$1.domElement );
 
 	// scene
@@ -1249,7 +1246,7 @@ function init$5() {
 	init$4( scene$1 );
 	init$3( scene$1 );
 
-	init$1( camera$2 );
+	init$1( camera$2, renderer$1.domElement );
 	init$2( renderer$1 );
 
 	// release mem for GC
