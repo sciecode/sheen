@@ -599,7 +599,7 @@ function copyTexture( input, output ) {
 
 function createURenderTarget() {
 
-	createRenderTarget( true );
+	return createRenderTarget( true );
 
 }
 
