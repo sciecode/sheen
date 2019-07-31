@@ -1,7 +1,7 @@
 export default /* glsl */`
 precision highp float;
 
-uniform int psel;
+uniform float psel;
 uniform vec2 tSize;
 uniform vec3 mouse;
 uniform sampler2D tPosition;
@@ -29,7 +29,7 @@ void main() {
 	vec3 pos = texture2D( tPosition, uv ).xyz;
 	vec3 org = texture2D( tOriginal, uv ).xyz;
 
-	uv = getUV( float( psel ) );
+	uv = getUV( psel );
 	vec3 ref = texture2D( tOriginal, uv ).xyz;
 
 	vec3 offset = mouse - ref;

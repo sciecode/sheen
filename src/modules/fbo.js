@@ -11,7 +11,7 @@ import {
 
 let
 RESOLUTION,
-renderer, mesh, targetRT, normalsRT,
+renderer, mesh, targetRT, ntargetRT, normalsRT,
 originalRT, previousRT, positionRT,
 constraintsRT, facesRT,
 steps = 60;
@@ -49,24 +49,30 @@ function init( WebGLRenderer ) {
 	// render targets
 	originalRT = createRenderTarget();
 	targetRT = createRenderTarget();
+	ntargetRT = createRenderTarget();
 	previousRT = createRenderTarget();
 	positionRT = createRenderTarget();
 	normalsRT = createRenderTarget();
 
-	constraintsRT = Array.from( { length: 2 }, createRenderTarget );
-	facesRT = Array.from( { length: 3 }, createRenderTarget );
+	constraintsRT = Array.from( { length: 4 }, createURenderTarget );
+	facesRT = Array.from( { length: 6 }, createURenderTarget );
 
 	// prepare
 	copyTexture( createPositionTexture( ), originalRT );
 	copyTexture( originalRT, previousRT );
 	copyTexture( originalRT, positionRT );
 
-	copyTexture( createConstraintsTexture( 0 ), constraintsRT[0] );
-	copyTexture( createConstraintsTexture( 4 ), constraintsRT[1] );
+	for ( let i = 0; i < 4; i++ ) {
 
-	copyTexture( createFacesTexture( 0 ), facesRT[0] );
-	copyTexture( createFacesTexture( 2 ), facesRT[1] );
-	copyTexture( createFacesTexture( 4 ), facesRT[2] );
+		copyTexture( createConstraintsTexture( i*2 ), constraintsRT[i] );
+
+	}
+
+	for ( let i = 0; i < 6; i++ ) {
+
+		copyTexture( createFacesTexture( i ), facesRT[i] );
+
+	}
 
 }
 
@@ -81,7 +87,13 @@ function copyTexture( input, output ) {
 
 }
 
-function createRenderTarget( ) {
+function createURenderTarget() {
+
+	createRenderTarget( true );
+
+}
+
+function createRenderTarget( unsigned ) {
 
 	return new THREE.WebGLRenderTarget( RESOLUTION, RESOLUTION, {
 		wrapS: THREE.ClampToEdgeWrapping,
@@ -89,7 +101,7 @@ function createRenderTarget( ) {
 		minFilter: THREE.NearestFilter,
 		magFilter: THREE.NearestFilter,
 		format: THREE.RGBAFormat,
-		type: THREE.FloatType,
+		type: ( unsigned ) ? THREE.UnsignedByteType : THREE.HalfFloatType,
 		depthTest: false,
 		depthWrite: false,
 		depthBuffer: false,
@@ -127,22 +139,28 @@ function createPositionTexture( ) {
 
 function createConstraintsTexture( k ) {
 
-	const data = new Float32Array( RESOLUTION * RESOLUTION * 4 );
+	const data = new Uint8Array( RESOLUTION * RESOLUTION * 4 );
 	const length = PRE.vertices.length;
 
 	for ( let i = 0; i < length; i++ ) {
 
 		const i4 = i * 4;
 
-		data[ i4 + 0 ] = ( PRE.colors[ i ][ k + 0 ] === undefined ) ? -1 : PRE.colors[ i ][ k + 0 ];
-		data[ i4 + 1 ] = ( PRE.colors[ i ][ k + 1 ] === undefined ) ? -1 : PRE.colors[ i ][ k + 1 ];
-		data[ i4 + 2 ] = ( PRE.colors[ i ][ k + 2 ] === undefined ) ? -1 : PRE.colors[ i ][ k + 2 ];
-		data[ i4 + 3 ] = ( PRE.colors[ i ][ k + 3 ] === undefined ) ? -1 : PRE.colors[ i ][ k + 3 ];
+		for ( let j = 0; j < 2; j++ ) {
+
+			let idx = PRE.colors[ i ][ k + j ];
+
+			if ( idx == undefined ) idx = (length+1);
+
+			data[ i4 + j*2 + 0 ] = idx % 256;
+			data[ i4 + j*2 + 1 ] = ~ ~ ( idx / 256 );
+
+		}
 
 	}
 
 	const tmp = {};
-	tmp.texture = new THREE.DataTexture( data, RESOLUTION, RESOLUTION, THREE.RGBAFormat, THREE.FloatType );
+	tmp.texture = new THREE.DataTexture( data, RESOLUTION, RESOLUTION, THREE.RGBAFormat, THREE.UnsignedByteType );
 	tmp.texture.minFilter = THREE.NearestFilter;
 	tmp.texture.magFilter = THREE.NearestFilter;
 	tmp.texture.needsUpdate = true;
@@ -155,22 +173,28 @@ function createConstraintsTexture( k ) {
 
 function createFacesTexture( k ) {
 
-	const data = new Float32Array( RESOLUTION * RESOLUTION * 4 );
+	const data = new Uint8Array( RESOLUTION * RESOLUTION * 4 );
 	const length = PRE.vertices.length;
 
 	for ( let i = 0; i < length; i++ ) {
 
 		const i4 = i * 4;
 
-		data[ i4 + 0 ] = ( PRE.faces[ i ][ k + 0 ] === undefined ) ? -1 : PRE.faces[ i ][ k + 0 ][0];
-		data[ i4 + 1 ] = ( PRE.faces[ i ][ k + 0 ] === undefined ) ? -1 : PRE.faces[ i ][ k + 0 ][1];
-		data[ i4 + 2 ] = ( PRE.faces[ i ][ k + 1 ] === undefined ) ? -1 : PRE.faces[ i ][ k + 1 ][0];
-		data[ i4 + 3 ] = ( PRE.faces[ i ][ k + 1 ] === undefined ) ? -1 : PRE.faces[ i ][ k + 1 ][1];
+		const face = PRE.faces[ i ][ k ];
+
+		for ( let j = 0; j < 2; j++ ) {
+
+			const idx = ( face == undefined ) ? (length+1) : face[j];
+
+			data[ i4 + j*2 + 0 ] = idx % 256;
+			data[ i4 + j*2 + 1 ] = ~ ~ ( idx / 256 );
+
+		}
 
 	}
 
 	const tmp = {};
-	tmp.texture = new THREE.DataTexture( data, RESOLUTION, RESOLUTION, THREE.RGBAFormat, THREE.FloatType );
+	tmp.texture = new THREE.DataTexture( data, RESOLUTION, RESOLUTION, THREE.RGBAFormat, THREE.UnsignedByteType );
 	tmp.texture.minFilter = THREE.NearestFilter;
 	tmp.texture.magFilter = THREE.NearestFilter;
 	tmp.texture.needsUpdate = true;
@@ -205,10 +229,11 @@ function integrate() {
 
 function solveConstraints( offset ) {
 
-	const tID = ( offset < 4 ) ? 0 : 1;
-	const cID = offset % 4;
+	const tID = ~ ~ ( offset / 2 );
+	const cID = offset % 2;
 
 	mesh.material = constraintsShader;
+	constraintsShader.uniforms.length.value = PRE.vertices.length;
 	constraintsShader.uniforms.tSize.value = tSize;
 	constraintsShader.uniforms.cID.value = cID;
 	constraintsShader.uniforms.tOriginal.value = originalRT.texture;
@@ -242,17 +267,22 @@ function mouseOffset() {
 
 }
 
-function computeVertexNormals() {
+function computeVertexNormals( id ) {
 
 	mesh.material = normalsShader;
+	normalsShader.uniforms.reset.value = ( id == 0 ) ? 1.0 : 0.0;
+	normalsShader.uniforms.length.value = PRE.vertices.length;
 	normalsShader.uniforms.tSize.value = tSize;
 	normalsShader.uniforms.tPosition.value = positionRT.texture;
-	normalsShader.uniforms.tFace1.value = facesRT[0].texture;
-	normalsShader.uniforms.tFace2.value = facesRT[1].texture;
-	normalsShader.uniforms.tFace3.value = facesRT[2].texture;
+	normalsShader.uniforms.tNormal.value = normalsRT.texture;
+	normalsShader.uniforms.tFace.value = facesRT[id].texture;
 
-	renderer.setRenderTarget( normalsRT );
+	renderer.setRenderTarget( ntargetRT );
 	renderer.render( scene, camera );
+
+	const tmp = normalsRT;
+	normalsRT = ntargetRT;
+	ntargetRT = tmp;
 
 }
 
@@ -262,7 +292,7 @@ function update() {
 
 	for ( let i = 0; i < steps; i++ ) {
 
-		if ( MOUSE.updating() && (i+5) < steps ) mouseOffset();
+		if ( MOUSE.updating() && ( i+5 ) < steps ) mouseOffset();
 
 		for ( let j = 0; j < 8; j++ ) {
 
@@ -272,7 +302,11 @@ function update() {
 
 	}
 
-	computeVertexNormals();
+	for ( let i = 0; i < 6; i++ ) {
+
+		computeVertexNormals( i );
+
+	}
 
 }
 

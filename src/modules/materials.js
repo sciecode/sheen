@@ -44,6 +44,7 @@ const constraintsShader = copyShader.clone();
 constraintsShader.fragmentShader = constraints_frag;
 constraintsShader.uniforms = {
 	cID: { value: null },
+	length: { value: null },
 	tSize: { type: 'v2' },
 	tOriginal: { type: 't' },
 	tPosition: { type: 't' },
@@ -53,11 +54,12 @@ constraintsShader.uniforms = {
 const normalsShader = copyShader.clone();
 normalsShader.fragmentShader = normals_frag;
 normalsShader.uniforms = {
+	reset: { value: null },
+	length: { value: null },
 	tSize: { type: 'v2' },
 	tPosition: { type: 't' },
-	tFace1: { type: 't' },
-	tFace2: { type: 't' },
-	tFace3: { type: 't' },
+	tNormal: { type: 't' },
+	tFace: { type: 't' },
 };
 
 export { copyShader, integrateShader, mouseShader, constraintsShader, normalsShader }

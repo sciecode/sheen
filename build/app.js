@@ -248,6 +248,7 @@ var constraints_frag = /* glsl */`
 precision highp float;
 
 uniform int cID;
+uniform float length;
 
 uniform vec2 tSize;
 
@@ -276,18 +277,17 @@ void main() {
 	vec3 orgA = texture2D( tOriginal, uv ).xyz;
 	vec3 posA = texture2D( tPosition, uv ).xyz;
 
-	float id;
+	float idx;
+	vec2 idxColor;
 
 	if ( cID == 0 )
-		id = texture2D( tConstraints, uv )[0];
+		idxColor = texture2D( tConstraints, uv ).xy;
 	if ( cID == 1 )
-		id = texture2D( tConstraints, uv )[1];
-	if ( cID == 2 )
-		id = texture2D( tConstraints, uv )[2];
-	if ( cID == 3 )
-		id = texture2D( tConstraints, uv )[3];
+		idxColor = texture2D( tConstraints, uv ).zw;
 
-	uv = getUV( id );
+	idx = idxColor.r * 255.0 + idxColor.g * 255.0 * 256.0;
+
+	uv = getUV( idx );
 
 	vec3 orgB = texture2D( tOriginal, uv ).xyz;
 	vec3 posB = texture2D( tPosition, uv ).xyz;
@@ -301,7 +301,7 @@ void main() {
 	float diff = restDist / ( curDist + restDist ) - 0.5;
 
 	if ( diff > 0.0 ) diff *= 0.25;
-	if ( id == -1.0 ) diff = 0.0;
+	if ( idx > length ) diff = 0.0;
 
 	posA -= offCur * diff * 0.52;
 
@@ -342,7 +342,7 @@ void main() {
 var mouse_frag = /* glsl */`
 precision highp float;
 
-uniform int psel;
+uniform float psel;
 uniform vec2 tSize;
 uniform vec3 mouse;
 uniform sampler2D tPosition;
@@ -370,7 +370,7 @@ void main() {
 	vec3 pos = texture2D( tPosition, uv ).xyz;
 	vec3 org = texture2D( tOriginal, uv ).xyz;
 
-	uv = getUV( float( psel ) );
+	uv = getUV( psel );
 	vec3 ref = texture2D( tOriginal, uv ).xyz;
 
 	vec3 offset = mouse - ref;
@@ -393,14 +393,14 @@ void main() {
 var normals_frag = /* glsl */`
 precision highp float;
 
-uniform int cID;
+uniform int reset;
+uniform float length;
 
 uniform vec2 tSize;
 
 uniform sampler2D tPosition;
-uniform sampler2D tFace1;
-uniform sampler2D tFace2;
-uniform sampler2D tFace3;
+uniform sampler2D tNormal;
+uniform sampler2D tFace;
 
 vec2 getUV( float id ) {
 
@@ -422,101 +422,28 @@ void main() {
 	vec3 a = texture2D( tPosition, uv ).xyz;
 
 	vec2 uvB, uvC;
-	vec3 normals, fNormal, b, c;
+	vec3 fNormal, b, c;
 
-	float idB, idC;
+	vec3 normal = ( reset == 1 ) ? vec3( 0.0 ) : texture2D( tNormal, uv ).xyz;
 
-	// face0
+	float idx;
 
-	idB = texture2D( tFace1, uv ).x;
-	idC = texture2D( tFace1, uv ).y;
+	vec2 bColor = texture2D( tFace, uv ).xy;
+	idx = bColor.r * 255.0 + bColor.g * 255.0 * 256.0;
+	uvB = getUV( idx );
 
-	uvB = getUV( idB );
-	uvC = getUV( idC );
-
-	b = texture2D( tPosition, uvB ).xyz;
-	c = texture2D( tPosition, uvC ).xyz;
-
-	fNormal = cross( ( c - b ), ( a - b ) );
-
-	if ( idB != -1.0 ) normals += fNormal;
-
-	// face1
-
-	idB = texture2D( tFace1, uv ).z;
-	idC = texture2D( tFace1, uv ).w;
-
-	uvB = getUV( idB );
-	uvC = getUV( idC );
+	vec2 cColor = texture2D( tFace, uv ).zw;
+	idx = cColor.r * 255.0 + cColor.g * 255.0 * 256.0;
+	uvC = getUV( idx );
 
 	b = texture2D( tPosition, uvB ).xyz;
 	c = texture2D( tPosition, uvC ).xyz;
 
 	fNormal = cross( ( c - b ), ( a - b ) );
 
-	if ( idB != - 1.0 ) normals += fNormal;
+	if ( idx <= length ) normal += fNormal;
 
-	// face2
-
-	idB = texture2D( tFace2, uv ).x;
-	idC = texture2D( tFace2, uv ).y;
-
-	uvB = getUV( idB );
-	uvC = getUV( idC );
-
-	b = texture2D( tPosition, uvB ).xyz;
-	c = texture2D( tPosition, uvC ).xyz;
-
-	fNormal = cross( ( c - b ), ( a - b ) );
-
-	if ( idB != - 1.0 ) normals += fNormal;
-
-	// face3
-
-	idB = texture2D( tFace2, uv ).z;
-	idC = texture2D( tFace2, uv ).w;
-
-	uvB = getUV( idB );
-	uvC = getUV( idC );
-
-	b = texture2D( tPosition, uvB ).xyz;
-	c = texture2D( tPosition, uvC ).xyz;
-
-	fNormal = cross( ( c - b ), ( a - b ) );
-
-	if ( idB != - 1.0 ) normals += fNormal;
-
-	// face4
-
-	idB = texture2D( tFace3, uv ).x;
-	idC = texture2D( tFace3, uv ).y;
-
-	uvB = getUV( idB );
-	uvC = getUV( idC );
-
-	b = texture2D( tPosition, uvB ).xyz;
-	c = texture2D( tPosition, uvC ).xyz;
-
-	fNormal = cross( ( c - b ), ( a - b ) );
-
-	if ( idB != - 1.0 ) normals += fNormal;
-
-	// face5
-
-	idB = texture2D( tFace3, uv ).z;
-	idC = texture2D( tFace3, uv ).w;
-
-	uvB = getUV( idB );
-	uvC = getUV( idC );
-
-	b = texture2D( tPosition, uvB ).xyz;
-	c = texture2D( tPosition, uvC ).xyz;
-
-	fNormal = cross( ( c - b ), ( a - b ) );
-
-	if ( idB != - 1.0 ) normals += fNormal;
-
-	gl_FragColor = vec4( normals, 1.0 );
+	gl_FragColor = vec4( normal, 1.0 );
 
 }
 `;
@@ -574,6 +501,7 @@ const constraintsShader = copyShader.clone();
 constraintsShader.fragmentShader = constraints_frag;
 constraintsShader.uniforms = {
 	cID: { value: null },
+	length: { value: null },
 	tSize: { type: 'v2' },
 	tOriginal: { type: 't' },
 	tPosition: { type: 't' },
@@ -583,16 +511,17 @@ constraintsShader.uniforms = {
 const normalsShader = copyShader.clone();
 normalsShader.fragmentShader = normals_frag;
 normalsShader.uniforms = {
+	reset: { value: null },
+	length: { value: null },
 	tSize: { type: 'v2' },
 	tPosition: { type: 't' },
-	tFace1: { type: 't' },
-	tFace2: { type: 't' },
-	tFace3: { type: 't' },
+	tNormal: { type: 't' },
+	tFace: { type: 't' },
 };
 
 let
 RESOLUTION,
-renderer, mesh, targetRT, normalsRT,
+renderer, mesh, targetRT, ntargetRT, normalsRT,
 originalRT, previousRT, positionRT,
 constraintsRT, facesRT,
 steps = 60;
@@ -630,24 +559,30 @@ function init$2( WebGLRenderer ) {
 	// render targets
 	originalRT = createRenderTarget();
 	targetRT = createRenderTarget();
+	ntargetRT = createRenderTarget();
 	previousRT = createRenderTarget();
 	positionRT = createRenderTarget();
 	normalsRT = createRenderTarget();
 
-	constraintsRT = Array.from( { length: 2 }, createRenderTarget );
-	facesRT = Array.from( { length: 3 }, createRenderTarget );
+	constraintsRT = Array.from( { length: 4 }, createURenderTarget );
+	facesRT = Array.from( { length: 6 }, createURenderTarget );
 
 	// prepare
 	copyTexture( createPositionTexture( ), originalRT );
 	copyTexture( originalRT, previousRT );
 	copyTexture( originalRT, positionRT );
 
-	copyTexture( createConstraintsTexture( 0 ), constraintsRT[0] );
-	copyTexture( createConstraintsTexture( 4 ), constraintsRT[1] );
+	for ( let i = 0; i < 4; i++ ) {
 
-	copyTexture( createFacesTexture( 0 ), facesRT[0] );
-	copyTexture( createFacesTexture( 2 ), facesRT[1] );
-	copyTexture( createFacesTexture( 4 ), facesRT[2] );
+		copyTexture( createConstraintsTexture( i*2 ), constraintsRT[i] );
+
+	}
+
+	for ( let i = 0; i < 6; i++ ) {
+
+		copyTexture( createFacesTexture( i ), facesRT[i] );
+
+	}
 
 }
 
@@ -662,7 +597,13 @@ function copyTexture( input, output ) {
 
 }
 
-function createRenderTarget( ) {
+function createURenderTarget() {
+
+	createRenderTarget( true );
+
+}
+
+function createRenderTarget( unsigned ) {
 
 	return new THREE.WebGLRenderTarget( RESOLUTION, RESOLUTION, {
 		wrapS: THREE.ClampToEdgeWrapping,
@@ -670,7 +611,7 @@ function createRenderTarget( ) {
 		minFilter: THREE.NearestFilter,
 		magFilter: THREE.NearestFilter,
 		format: THREE.RGBAFormat,
-		type: THREE.FloatType,
+		type: ( unsigned ) ? THREE.UnsignedByteType : THREE.HalfFloatType,
 		depthTest: false,
 		depthWrite: false,
 		depthBuffer: false,
@@ -708,22 +649,28 @@ function createPositionTexture( ) {
 
 function createConstraintsTexture( k ) {
 
-	const data = new Float32Array( RESOLUTION * RESOLUTION * 4 );
+	const data = new Uint8Array( RESOLUTION * RESOLUTION * 4 );
 	const length = vertices.length;
 
 	for ( let i = 0; i < length; i++ ) {
 
 		const i4 = i * 4;
 
-		data[ i4 + 0 ] = ( colors[ i ][ k + 0 ] === undefined ) ? -1 : colors[ i ][ k + 0 ];
-		data[ i4 + 1 ] = ( colors[ i ][ k + 1 ] === undefined ) ? -1 : colors[ i ][ k + 1 ];
-		data[ i4 + 2 ] = ( colors[ i ][ k + 2 ] === undefined ) ? -1 : colors[ i ][ k + 2 ];
-		data[ i4 + 3 ] = ( colors[ i ][ k + 3 ] === undefined ) ? -1 : colors[ i ][ k + 3 ];
+		for ( let j = 0; j < 2; j++ ) {
+
+			let idx = colors[ i ][ k + j ];
+
+			if ( idx == undefined ) idx = (length+1);
+
+			data[ i4 + j*2 + 0 ] = idx % 256;
+			data[ i4 + j*2 + 1 ] = ~ ~ ( idx / 256 );
+
+		}
 
 	}
 
 	const tmp = {};
-	tmp.texture = new THREE.DataTexture( data, RESOLUTION, RESOLUTION, THREE.RGBAFormat, THREE.FloatType );
+	tmp.texture = new THREE.DataTexture( data, RESOLUTION, RESOLUTION, THREE.RGBAFormat, THREE.UnsignedByteType );
 	tmp.texture.minFilter = THREE.NearestFilter;
 	tmp.texture.magFilter = THREE.NearestFilter;
 	tmp.texture.needsUpdate = true;
@@ -736,22 +683,28 @@ function createConstraintsTexture( k ) {
 
 function createFacesTexture( k ) {
 
-	const data = new Float32Array( RESOLUTION * RESOLUTION * 4 );
+	const data = new Uint8Array( RESOLUTION * RESOLUTION * 4 );
 	const length = vertices.length;
 
 	for ( let i = 0; i < length; i++ ) {
 
 		const i4 = i * 4;
 
-		data[ i4 + 0 ] = ( faces[ i ][ k + 0 ] === undefined ) ? -1 : faces[ i ][ k + 0 ][0];
-		data[ i4 + 1 ] = ( faces[ i ][ k + 0 ] === undefined ) ? -1 : faces[ i ][ k + 0 ][1];
-		data[ i4 + 2 ] = ( faces[ i ][ k + 1 ] === undefined ) ? -1 : faces[ i ][ k + 1 ][0];
-		data[ i4 + 3 ] = ( faces[ i ][ k + 1 ] === undefined ) ? -1 : faces[ i ][ k + 1 ][1];
+		const face = faces[ i ][ k ];
+
+		for ( let j = 0; j < 2; j++ ) {
+
+			const idx = ( face == undefined ) ? (length+1) : face[j];
+
+			data[ i4 + j*2 + 0 ] = idx % 256;
+			data[ i4 + j*2 + 1 ] = ~ ~ ( idx / 256 );
+
+		}
 
 	}
 
 	const tmp = {};
-	tmp.texture = new THREE.DataTexture( data, RESOLUTION, RESOLUTION, THREE.RGBAFormat, THREE.FloatType );
+	tmp.texture = new THREE.DataTexture( data, RESOLUTION, RESOLUTION, THREE.RGBAFormat, THREE.UnsignedByteType );
 	tmp.texture.minFilter = THREE.NearestFilter;
 	tmp.texture.magFilter = THREE.NearestFilter;
 	tmp.texture.needsUpdate = true;
@@ -786,10 +739,11 @@ function integrate() {
 
 function solveConstraints( offset ) {
 
-	const tID = ( offset < 4 ) ? 0 : 1;
-	const cID = offset % 4;
+	const tID = ~ ~ ( offset / 2 );
+	const cID = offset % 2;
 
 	mesh.material = constraintsShader;
+	constraintsShader.uniforms.length.value = vertices.length;
 	constraintsShader.uniforms.tSize.value = tSize;
 	constraintsShader.uniforms.cID.value = cID;
 	constraintsShader.uniforms.tOriginal.value = originalRT.texture;
@@ -823,17 +777,22 @@ function mouseOffset() {
 
 }
 
-function computeVertexNormals() {
+function computeVertexNormals( id ) {
 
 	mesh.material = normalsShader;
+	normalsShader.uniforms.reset.value = ( id == 0 ) ? 1.0 : 0.0;
+	normalsShader.uniforms.length.value = vertices.length;
 	normalsShader.uniforms.tSize.value = tSize;
 	normalsShader.uniforms.tPosition.value = positionRT.texture;
-	normalsShader.uniforms.tFace1.value = facesRT[0].texture;
-	normalsShader.uniforms.tFace2.value = facesRT[1].texture;
-	normalsShader.uniforms.tFace3.value = facesRT[2].texture;
+	normalsShader.uniforms.tNormal.value = normalsRT.texture;
+	normalsShader.uniforms.tFace.value = facesRT[id].texture;
 
-	renderer.setRenderTarget( normalsRT );
+	renderer.setRenderTarget( ntargetRT );
 	renderer.render( scene, camera$1 );
+
+	const tmp = normalsRT;
+	normalsRT = ntargetRT;
+	ntargetRT = tmp;
 
 }
 
@@ -843,7 +802,7 @@ function update() {
 
 	for ( let i = 0; i < steps; i++ ) {
 
-		if ( updating() && (i+5) < steps ) mouseOffset();
+		if ( updating() && ( i+5 ) < steps ) mouseOffset();
 
 		for ( let j = 0; j < 8; j++ ) {
 
@@ -853,7 +812,11 @@ function update() {
 
 	}
 
-	computeVertexNormals();
+	for ( let i = 0; i < 6; i++ ) {
+
+		computeVertexNormals( i );
+
+	}
 
 }
 
