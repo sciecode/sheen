@@ -530,7 +530,8 @@ steps = 60;
 const
 tSize = new THREE.Vector2(),
 scene = new THREE.Scene(),
-camera$1 = new THREE.Camera();
+camera$1 = new THREE.Camera(),
+clock = new THREE.Clock();
 
 function init$2( WebGLRenderer ) {
 
@@ -716,9 +717,12 @@ function createFacesTexture( k ) {
 
 function integrate() {
 
+	let dt = clock.getDelta();
+	dt = ( dt > 0.016 ) ? 0.016 : dt;
+
 	mesh.material = integrateShader;
 	integrateShader.uniforms.tSize.value = tSize;
-	integrateShader.uniforms.dt.value = 0.016;
+	integrateShader.uniforms.dt.value = dt;
 	integrateShader.uniforms.tOriginal.value = originalRT.texture;
 	integrateShader.uniforms.tPrevious.value = previousRT.texture;
 	integrateShader.uniforms.tPosition.value = positionRT.texture;
@@ -1102,7 +1106,7 @@ let
 objects;
 
 const
-clock = new THREE.Clock();
+clock$1 = new THREE.Clock();
 
 function init$4( scene ) {
 
@@ -1156,7 +1160,7 @@ function update$1( ) {
 		return c/2*((t-=2)*t*t + 2);
 	}
 
-	const time = clock.getElapsedTime();
+	const time = clock$1.getElapsedTime();
 
 	if ( time > 1 && time < 4 ) {
 
