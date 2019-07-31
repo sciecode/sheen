@@ -183,12 +183,12 @@ function createFacesTexture( k ) {
 
 function integrate() {
 
-	const dt = clock.getDelta();
-	const dt2 = ( dt > 0.016 ) ? 0.016 : dt;
+	let dt = clock.getDelta();
+	dt = ( dt > 0.016 ) ? 0.016 : dt;
 
 	mesh.material = integrateShader;
 	integrateShader.uniforms.tSize.value = tSize;
-	integrateShader.uniforms.dt2.value = dt2*dt2;
+	integrateShader.uniforms.dt.value = dt;
 	integrateShader.uniforms.tOriginal.value = originalRT.texture;
 	integrateShader.uniforms.tPrevious.value = previousRT.texture;
 	integrateShader.uniforms.tPosition.value = positionRT.texture;

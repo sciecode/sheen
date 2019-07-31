@@ -2,7 +2,7 @@ export default /* glsl */`
 precision highp float;
 
 
-uniform float dt2;
+uniform float dt;
 uniform vec2 tSize;
 
 uniform sampler2D tOriginal;
@@ -10,6 +10,8 @@ uniform sampler2D tPrevious;
 uniform sampler2D tPosition;
 
 void main() {
+
+	float dt2 = dt * dt;
 
 	vec2 uv = gl_FragCoord.xy / tSize.xy;
 
