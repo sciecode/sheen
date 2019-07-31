@@ -1225,6 +1225,9 @@ function init$5() {
 	renderer$1.shadowMap.enabled = true;
 	renderer$1.shadowMap.type = THREE.PCFShadowMap;
 
+	renderer$1.debug.checkShaderErrors = true;
+	console.log( renderer$1.capabilities );
+
 	document.body.appendChild( renderer$1.domElement );
 
 	// scene
