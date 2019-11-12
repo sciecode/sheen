@@ -18,11 +18,11 @@ function init( scene ) {
 		color: 0xffda20,
 		bumpMap: bmp,
 		bumpScale: 0.25,
-		metalness: 0,
-		roughness: 0.9,
-		// clearcoat: 0.8,
-		// clearcoatRoughness: 0.35,
-		sheen: new THREE.Color( 0, 0, 1 ),
+		metalness: 0.1,
+		roughness: 0.6,
+		clearcoat: 0.8,
+		clearcoatRoughness: 0.35,
+		sheen: new THREE.Color( 0.2, 0.2, 1 ).multiplyScalar( 1 / 6 ),
 		dithering: true
 
 	} );

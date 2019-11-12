@@ -837,11 +837,11 @@ function init$3( scene ) {
 		color: 0xffda20,
 		bumpMap: bmp,
 		bumpScale: 0.25,
-		metalness: 0,
-		roughness: 0.9,
-		// clearcoat: 0.8,
-		// clearcoatRoughness: 0.35,
-		sheen: new THREE.Color( 0, 0, 1 ),
+		metalness: 0.1,
+		roughness: 0.6,
+		clearcoat: 0.8,
+		clearcoatRoughness: 0.35,
+		sheen: new THREE.Color( 0.2, 0.2, 1 ).multiplyScalar( 1 / 6 ),
 		dithering: true
 
 	} );
@@ -905,7 +905,7 @@ function init$4( scene ) {
 
 	// lights
 	const ambientLight = new THREE.AmbientLight( 0xffffff, 0 );
-	ambientLight.baseIntensity = 1.0;
+	ambientLight.baseIntensity = 0.5;
 
 	const spotLight = new THREE.SpotLight( 0xfd8b8b, 0, 4000, Math.PI/6, 0.2, 0.11 );
 	spotLight.baseIntensity = 3.6;
@@ -917,7 +917,7 @@ function init$4( scene ) {
 	spotLight.shadow.mapSize.width = 4096;
 
 	const spotLight2 = new THREE.SpotLight( 0x4a7fe8, 0, 4000, Math.PI/6, 0.2, 0.11 );
-	spotLight2.baseIntensity = 2.6;
+	spotLight2.baseIntensity = 2.0;
 	spotLight2.position.set( -0.91, 0.1, -0.5 ).multiplyScalar( 400 );
 	spotLight2.castShadow = true;
 	spotLight2.shadow.radius = 20;
@@ -926,7 +926,7 @@ function init$4( scene ) {
 	spotLight2.shadow.mapSize.width = 4096;
 
 	const spotLight3 = new THREE.SpotLight( 0xffffff, 0, 4000, Math.PI/5.5, 1.4, 0.08 );
-	spotLight3.baseIntensity = 1.8;
+	spotLight3.baseIntensity = 1.5;
 	spotLight3.position.set( 0, 0, -1 ).multiplyScalar( 400 );
 	spotLight3.castShadow = true;
 	spotLight3.shadow.radius = 5;
