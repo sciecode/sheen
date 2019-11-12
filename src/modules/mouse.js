@@ -26,7 +26,7 @@ function init( PerspectiveCamera ) {
 
 function updating() {
 
-	if ( ! interacting ) return;
+	if ( ! interacting ) return false;
 
 	raycaster.setFromCamera( mouse, camera );
 

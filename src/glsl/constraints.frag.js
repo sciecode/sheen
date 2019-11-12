@@ -32,12 +32,8 @@ void main() {
 	vec3 posA = texture2D( tPosition, uv ).xyz;
 
 	float idx;
-	vec2 idxColor;
-
-	if ( cID == 0 )
-		idxColor = texture2D( tConstraints, uv ).xy;
-	if ( cID == 1 )
-		idxColor = texture2D( tConstraints, uv ).zw;
+	
+	vec2 idxColor = ( cID == 0 ) ? texture2D( tConstraints, uv ).xy : texture2D( tConstraints, uv ).zw;
 
 	idx = idxColor.r * 255.0 + idxColor.g * 255.0 * 256.0;
 

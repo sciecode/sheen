@@ -14,7 +14,8 @@ RESOLUTION,
 renderer, mesh, targetRT, ntargetRT, normalsRT,
 originalRT, previousRT, positionRT,
 constraintsRT, facesRT,
-steps = 60;
+steps = 50;
+
 
 // setup
 const
@@ -45,6 +46,8 @@ function init( WebGLRenderer ) {
 	mesh = new THREE.Mesh( geometry, copyShader );
 	mesh.frustumCulled = false;
 	scene.add( mesh );
+
+	scene.updateMatrixWorld = function() {};
 
 	// render targets
 	originalRT = createRenderTarget();
@@ -290,9 +293,11 @@ function update() {
 
 	integrate();
 
+	let mouseUpdating = MOUSE.updating();
+
 	for ( let i = 0; i < steps; i++ ) {
 
-		if ( MOUSE.updating() && ( i+5 ) < steps ) mouseOffset();
+		if ( mouseUpdating && (i+5) < steps ) mouseOffset();
 
 		for ( let j = 0; j < 8; j++ ) {
 

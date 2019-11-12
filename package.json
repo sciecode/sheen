@@ -6,7 +6,7 @@
   "scripts": {
     "build": "rollup -c",
     "build-closure": "rollup -c && google-closure-compiler --warning_level=VERBOSE --jscomp_off=globalThis --jscomp_off=checkTypes --externs utils/externs.js --js build/app.js --js_output_file build/app.min.js",
-    "dev": "concurrently --names \"ROLLUP,HTTP\" -c \"bgBlue.bold,bgGreen.bold\" \"rollup -c -w\" \"http-server\""
+    "dev": "concurrently --names \"ROLLUP,HTTP\" -c \"bgBlue.bold,bgGreen.bold\" \"rollup -c -w\" \"http-server\" -c-1"
   },
   "author": "sciecode",
   "license": "MIT",

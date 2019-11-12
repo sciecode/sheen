@@ -164,7 +164,7 @@ function init$1( PerspectiveCamera ) {
 
 function updating() {
 
-	if ( ! interacting ) return;
+	if ( ! interacting ) return false;
 
 	raycaster.setFromCamera( mouse, camera );
 
@@ -278,12 +278,8 @@ void main() {
 	vec3 posA = texture2D( tPosition, uv ).xyz;
 
 	float idx;
-	vec2 idxColor;
-
-	if ( cID == 0 )
-		idxColor = texture2D( tConstraints, uv ).xy;
-	if ( cID == 1 )
-		idxColor = texture2D( tConstraints, uv ).zw;
+	
+	vec2 idxColor = ( cID == 0 ) ? texture2D( tConstraints, uv ).xy : texture2D( tConstraints, uv ).zw;
 
 	idx = idxColor.r * 255.0 + idxColor.g * 255.0 * 256.0;
 
@@ -524,7 +520,8 @@ RESOLUTION,
 renderer, mesh, targetRT, ntargetRT, normalsRT,
 originalRT, previousRT, positionRT,
 constraintsRT, facesRT,
-steps = 60;
+steps = 50;
+
 
 // setup
 const
@@ -555,6 +552,8 @@ function init$2( WebGLRenderer ) {
 	mesh = new THREE.Mesh( geometry, copyShader );
 	mesh.frustumCulled = false;
 	scene.add( mesh );
+
+	scene.updateMatrixWorld = function() {};
 
 	// render targets
 	originalRT = createRenderTarget();
@@ -800,9 +799,11 @@ function update() {
 
 	integrate();
 
+	let mouseUpdating = updating();
+
 	for ( let i = 0; i < steps; i++ ) {
 
-		if ( updating() && ( i+5 ) < steps ) mouseOffset();
+		if ( mouseUpdating && (i+5) < steps ) mouseOffset();
 
 		for ( let j = 0; j < 8; j++ ) {
 
