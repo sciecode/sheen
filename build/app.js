@@ -29,7 +29,9 @@ constraints = new Array();
 function calculate( ) {
 
 	const tmp = new THREE.IcosahedronBufferGeometry( 100, 5 );
-	geometry = THREE.BufferGeometryUtils.mergeVertices( tmp, 1.5 );
+	
+	// icosahedron generated dettached vertices
+	geometry = THREE.BufferGeometryUtils.mergeVertices( tmp, 1.5 ); 
 
 	populateVertices();
 
@@ -460,6 +462,8 @@ void main() {
 
 // shader-import-block
 
+
+// copyToRenderTarget
 const copyShader = new THREE.RawShaderMaterial( {
 	uniforms: {
 		tSize: { type: 'v2' },
@@ -473,6 +477,7 @@ const copyShader = new THREE.RawShaderMaterial( {
 	depthTest: false
 });
 
+// forward-integration
 const integrateShader = copyShader.clone();
 integrateShader.fragmentShader = integrate_frag;
 integrateShader.uniforms = {
@@ -483,6 +488,7 @@ integrateShader.uniforms = {
 	tPosition: { type: 't' }
 };
 
+// mouse displacement 
 const mouseShader = copyShader.clone();
 mouseShader.fragmentShader = mouse_frag;
 mouseShader.uniforms = {
@@ -493,6 +499,7 @@ mouseShader.uniforms = {
 	tPosition: { type: 't' }
 };
 
+// vertices relaxation
 const constraintsShader = copyShader.clone();
 constraintsShader.fragmentShader = constraints_frag;
 constraintsShader.uniforms = {
@@ -504,6 +511,7 @@ constraintsShader.uniforms = {
 	tConstraints: { type: 't' }
 };
 
+// calculate normals
 const normalsShader = copyShader.clone();
 normalsShader.fragmentShader = normals_frag;
 normalsShader.uniforms = {
@@ -523,7 +531,6 @@ constraintsRT, facesRT,
 steps = 50;
 
 
-// setup
 const
 tSize = new THREE.Vector2(),
 scene = new THREE.Scene(),
@@ -571,12 +578,14 @@ function init$2( WebGLRenderer ) {
 	copyTexture( originalRT, previousRT );
 	copyTexture( originalRT, positionRT );
 
+	// setup relaxed vertices conditions
 	for ( let i = 0; i < 4; i++ ) {
 
 		copyTexture( createConstraintsTexture( i*2 ), constraintsRT[i] );
 
 	}
 
+	// compute faces information for normals
 	for ( let i = 0; i < 6; i++ ) {
 
 		copyTexture( createFacesTexture( i ), facesRT[i] );
@@ -847,6 +856,7 @@ function init$3( scene ) {
 
 	} );
 
+	// update cloth material with computed position and normals
 	material.onBeforeCompile = function ( shader ) {
 		shader.uniforms.tPosition = { value: positionRT.texture };
 		shader.uniforms.tNormal = { value: normalsRT.texture };
@@ -863,6 +873,7 @@ function init$3( scene ) {
 		);
 	};
 
+	// update depth material for correct shadows
 	const depthMaterial = new THREE.MeshDepthMaterial();
 	depthMaterial.onBeforeCompile = function ( shader ) {
 		shader.uniforms.tPosition = { value: positionRT.texture };
@@ -873,7 +884,7 @@ function init$3( scene ) {
 		);
 	};
 
-
+	// fill position with associated texture sampling coordinate
 	const position = new Float32Array( RESOLUTION$1 * RESOLUTION$1 * 3 );
 	for ( let i = 0, il = RESOLUTION$1 * RESOLUTION$1; i < il; i ++ ) {
 

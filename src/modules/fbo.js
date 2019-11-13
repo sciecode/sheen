@@ -17,7 +17,6 @@ constraintsRT, facesRT,
 steps = 50;
 
 
-// setup
 const
 tSize = new THREE.Vector2(),
 scene = new THREE.Scene(),
@@ -57,7 +56,9 @@ function init( WebGLRenderer ) {
 	positionRT = createRenderTarget();
 	normalsRT = createRenderTarget();
 
+	// this is dependant on the edge-coloring algorithm, need to experiment with what works for other models.
 	constraintsRT = Array.from( { length: 4 }, createURenderTarget );
+	// same
 	facesRT = Array.from( { length: 6 }, createURenderTarget );
 
 	// prepare
@@ -65,12 +66,14 @@ function init( WebGLRenderer ) {
 	copyTexture( originalRT, previousRT );
 	copyTexture( originalRT, positionRT );
 
+	// setup relaxed vertices conditions
 	for ( let i = 0; i < 4; i++ ) {
 
 		copyTexture( createConstraintsTexture( i*2 ), constraintsRT[i] );
 
 	}
 
+	// compute faces information for normals
 	for ( let i = 0; i < 6; i++ ) {
 
 		copyTexture( createFacesTexture( i ), facesRT[i] );

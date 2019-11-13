@@ -12,10 +12,10 @@
   "license": "MIT",
   "homepage": "sciecode.github.io/sheen",
   "devDependencies": {
-    "concurrently": "^4.1.1",
+    "concurrently": "^4.1.2",
     "google-closure-compiler": "20190415.0.0",
     "http-server": "^0.11.1",
-    "rollup": "^1.17.0",
+    "rollup": "^1.27.0",
     "three": "^0.109"
   }
 }

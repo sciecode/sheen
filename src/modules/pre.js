@@ -8,11 +8,15 @@ constraints = new Array();
 function calculate( ) {
 
 	const tmp = new THREE.IcosahedronBufferGeometry( 100, 5 );
-	geometry = THREE.BufferGeometryUtils.mergeVertices( tmp, 1.5 );
+
+	// icosahedron generates non-indexed vertices, we make use of graph adjacency.
+	geometry = THREE.BufferGeometryUtils.mergeVertices( tmp, 1.5 ); 
 
 	populateVertices();
 
 	faces = Array.from( { length: vertices.length }, () => new Array() );
+
+	// I know 8 is sufficient in this case, but it might not be if you are re-utilizing this code.
 	colors = Array.from( { length: vertices.length }, () => new Array( 8 ).fill() );
 
 	populateConstraints();
@@ -83,6 +87,8 @@ function populateConstraints( ) {
 function populateColors( ) {
 
 	// naive edge-coloring implementation, should be optimized.
+	// works decently well for this case, but definitely the bottleneck of this method.
+	// improving this is well worth it.
 	for ( let i = 0, il = constraints.length; i < il; i++ ) {
 
 		const con = constraints[i];

@@ -7,6 +7,8 @@ import mouse_frag from '../glsl/mouse.frag.js';
 import normals_frag from '../glsl/normals.frag.js';
 import through_frag from '../glsl/through.frag.js';
 
+
+// copyToRenderTarget
 const copyShader = new THREE.RawShaderMaterial( {
 	uniforms: {
 		tSize: { type: 'v2' },
@@ -20,6 +22,7 @@ const copyShader = new THREE.RawShaderMaterial( {
 	depthTest: false
 });
 
+// forward-integration
 const integrateShader = copyShader.clone();
 integrateShader.fragmentShader = integrate_frag;
 integrateShader.uniforms = {
@@ -30,6 +33,7 @@ integrateShader.uniforms = {
 	tPosition: { type: 't' }
 };
 
+// mouse displacement 
 const mouseShader = copyShader.clone();
 mouseShader.fragmentShader = mouse_frag;
 mouseShader.uniforms = {
@@ -40,6 +44,7 @@ mouseShader.uniforms = {
 	tPosition: { type: 't' }
 };
 
+// vertices relaxation
 const constraintsShader = copyShader.clone();
 constraintsShader.fragmentShader = constraints_frag;
 constraintsShader.uniforms = {
@@ -51,6 +56,7 @@ constraintsShader.uniforms = {
 	tConstraints: { type: 't' }
 };
 
+// calculate normals
 const normalsShader = copyShader.clone();
 normalsShader.fragmentShader = normals_frag;
 normalsShader.uniforms = {

@@ -27,6 +27,7 @@ function init( scene ) {
 
 	} );
 
+	// update cloth material with computed position and normals
 	material.onBeforeCompile = function ( shader ) {
 		shader.uniforms.tPosition = { value: FBO.positionRT.texture };
 		shader.uniforms.tNormal = { value: FBO.normalsRT.texture };
@@ -43,6 +44,7 @@ function init( scene ) {
 		);
 	};
 
+	// update depth material for correct shadows
 	const depthMaterial = new THREE.MeshDepthMaterial();
 	depthMaterial.onBeforeCompile = function ( shader ) {
 		shader.uniforms.tPosition = { value: FBO.positionRT.texture };
@@ -53,7 +55,7 @@ function init( scene ) {
 		);
 	};
 
-
+	// fill position with associated texture sampling coordinate
 	const position = new Float32Array( RESOLUTION * RESOLUTION * 3 );
 	for ( let i = 0, il = RESOLUTION * RESOLUTION; i < il; i ++ ) {
 
