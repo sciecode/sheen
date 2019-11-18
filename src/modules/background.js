@@ -14,7 +14,7 @@ function init( scene ) {
 	const object = new THREE.Mesh( geometry, material );
 	object.receiveShadow = true;
 	object.rotation.x += Math.PI * 0.9;
-	object.position.set( 0, -100, 2000 );
+	object.position.set( 0, - 100, 2000 );
 
 	scene.add( object );
 

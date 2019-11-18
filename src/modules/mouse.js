@@ -1,7 +1,7 @@
 import * as PRE from './pre.js';
 
 let
-camera, object,
+camera,
 interacting = false,
 psel = undefined;
 
@@ -39,7 +39,7 @@ function updating() {
 			let dist = Infinity;
 			for ( let i = 0; i < PRE.vertices.length; i++ ) {
 
-				const tmp = mouse3d.distanceTo( PRE.vertices[i] );
+				const tmp = mouse3d.distanceTo( PRE.vertices[ i ] );
 
 				if ( tmp < dist ) {
 

@@ -11,17 +11,16 @@ import {
 
 let
 RESOLUTION,
-renderer, mesh, targetRT, ntargetRT, normalsRT,
+renderer, mesh, targetRT, normalsRT,
 originalRT, previousRT, positionRT,
-constraintsRT, facesRT,
-steps = 50;
+adjacentsRT, distancesRT,
+steps = 40;
 
 
 const
 tSize = new THREE.Vector2(),
 scene = new THREE.Scene(),
-camera = new THREE.Camera(),
-clock = new THREE.Clock();
+camera = new THREE.Camera();
 
 function init( WebGLRenderer ) {
 
@@ -51,15 +50,12 @@ function init( WebGLRenderer ) {
 	// render targets
 	originalRT = createRenderTarget();
 	targetRT = createRenderTarget();
-	ntargetRT = createRenderTarget();
 	previousRT = createRenderTarget();
 	positionRT = createRenderTarget();
 	normalsRT = createRenderTarget();
 
-	// this is dependant on the edge-coloring algorithm, need to experiment with what works for other models.
-	constraintsRT = Array.from( { length: 4 }, createURenderTarget );
-	// same
-	facesRT = Array.from( { length: 6 }, createURenderTarget );
+	adjacentsRT = Array.from( { length: 2 }, createRenderTarget );
+	distancesRT = Array.from( { length: 2 }, createRenderTarget );
 
 	// prepare
 	copyTexture( createPositionTexture( ), originalRT );
@@ -67,16 +63,16 @@ function init( WebGLRenderer ) {
 	copyTexture( originalRT, positionRT );
 
 	// setup relaxed vertices conditions
-	for ( let i = 0; i < 4; i++ ) {
+	for ( let i = 0; i < 2; i++ ) {
 
-		copyTexture( createConstraintsTexture( i*2 ), constraintsRT[i] );
+		copyTexture( createAdjacentsTexture( i*4 ), adjacentsRT[i] );
 
 	}
 
-	// compute faces information for normals
-	for ( let i = 0; i < 6; i++ ) {
+	// setup vertices original distances
+	for ( let i = 0; i < 2; i++ ) {
 
-		copyTexture( createFacesTexture( i ), facesRT[i] );
+		copyTexture( createDistancesTexture( i*4 ), distancesRT[i] );
 
 	}
 
@@ -93,13 +89,7 @@ function copyTexture( input, output ) {
 
 }
 
-function createURenderTarget() {
-
-	return createRenderTarget( true );
-
-}
-
-function createRenderTarget( unsigned ) {
+function createRenderTarget( ) {
 
 	return new THREE.WebGLRenderTarget( RESOLUTION, RESOLUTION, {
 		wrapS: THREE.ClampToEdgeWrapping,
@@ -107,7 +97,7 @@ function createRenderTarget( unsigned ) {
 		minFilter: THREE.NearestFilter,
 		magFilter: THREE.NearestFilter,
 		format: THREE.RGBAFormat,
-		type: ( unsigned ) ? THREE.UnsignedByteType : THREE.FloatType,
+		type: THREE.FloatType,
 		depthTest: false,
 		depthWrite: false,
 		depthBuffer: false,
@@ -143,30 +133,26 @@ function createPositionTexture( ) {
 
 }
 
-function createConstraintsTexture( k ) {
+function createAdjacentsTexture( k ) {
 
-	const data = new Uint8Array( RESOLUTION * RESOLUTION * 4 );
+	const data = new Float32Array( RESOLUTION * RESOLUTION * 4 );
 	const length = PRE.vertices.length;
 
 	for ( let i = 0; i < length; i++ ) {
 
 		const i4 = i * 4;
+		const adj = PRE.adjacency[ i ];
+		const len = PRE.adjacency[ i ].length;
 
-		for ( let j = 0; j < 2; j++ ) {
-
-			let idx = PRE.colors[ i ][ k + j ];
-
-			if ( idx == undefined ) idx = (length+1);
-
-			data[ i4 + j*2 + 0 ] = idx % 256;
-			data[ i4 + j*2 + 1 ] = ~ ~ ( idx / 256 );
-
-		}
+		data[ i4 + 0 ] = adj[ k + 0 ];
+		data[ i4 + 1 ] = ( len < 6 && k > 0 ) ? - 1 : adj[ k + 1 ];
+		data[ i4 + 2 ] = ( k > 0 ) ? - 1 : adj[ k + 2 ];
+		data[ i4 + 3 ] = ( k > 0 ) ? - 1 : adj[ k + 3 ];
 
 	}
 
 	const tmp = {};
-	tmp.texture = new THREE.DataTexture( data, RESOLUTION, RESOLUTION, THREE.RGBAFormat, THREE.UnsignedByteType );
+	tmp.texture = new THREE.DataTexture( data, RESOLUTION, RESOLUTION, THREE.RGBAFormat, THREE.FloatType );
 	tmp.texture.minFilter = THREE.NearestFilter;
 	tmp.texture.magFilter = THREE.NearestFilter;
 	tmp.texture.needsUpdate = true;
@@ -177,30 +163,30 @@ function createConstraintsTexture( k ) {
 
 }
 
-function createFacesTexture( k ) {
+function createDistancesTexture( k ) {
 
-	const data = new Uint8Array( RESOLUTION * RESOLUTION * 4 );
+	const data = new Float32Array( RESOLUTION * RESOLUTION * 4 );
 	const length = PRE.vertices.length;
+
+	const vert = PRE.vertices;
 
 	for ( let i = 0; i < length; i++ ) {
 
 		const i4 = i * 4;
+		const adj = PRE.adjacency[ i ];
+		const len = PRE.adjacency[ i ].length;
 
-		const face = PRE.faces[ i ][ k ];
+		const v = vert[i];
 
-		for ( let j = 0; j < 2; j++ ) {
-
-			const idx = ( face == undefined ) ? (length+1) : face[j];
-
-			data[ i4 + j*2 + 0 ] = idx % 256;
-			data[ i4 + j*2 + 1 ] = ~ ~ ( idx / 256 );
-
-		}
+		data[ i4 + 0 ] = v.distanceTo( vert[ adj[ k + 0 ] ] );
+		data[ i4 + 1 ] = ( len < 6 && k > 0 ) ? - 1 : v.distanceTo( vert[ adj[ k + 1 ] ] );
+		data[ i4 + 2 ] = ( k > 0 ) ? - 1 : v.distanceTo( vert[ adj[ k + 2 ] ] );
+		data[ i4 + 3 ] = ( k > 0 ) ? - 1 : v.distanceTo( vert[ adj[ k + 3 ] ] );
 
 	}
 
 	const tmp = {};
-	tmp.texture = new THREE.DataTexture( data, RESOLUTION, RESOLUTION, THREE.RGBAFormat, THREE.UnsignedByteType );
+	tmp.texture = new THREE.DataTexture( data, RESOLUTION, RESOLUTION, THREE.RGBAFormat, THREE.FloatType );
 	tmp.texture.minFilter = THREE.NearestFilter;
 	tmp.texture.magFilter = THREE.NearestFilter;
 	tmp.texture.needsUpdate = true;
@@ -213,12 +199,8 @@ function createFacesTexture( k ) {
 
 function integrate() {
 
-	let dt = clock.getDelta();
-	dt = ( dt > 0.016 ) ? 0.016 : dt;
-
 	mesh.material = integrateShader;
 	integrateShader.uniforms.tSize.value = tSize;
-	integrateShader.uniforms.dt.value = dt;
 	integrateShader.uniforms.tOriginal.value = originalRT.texture;
 	integrateShader.uniforms.tPrevious.value = previousRT.texture;
 	integrateShader.uniforms.tPosition.value = positionRT.texture;
@@ -233,18 +215,15 @@ function integrate() {
 
 }
 
-function solveConstraints( offset ) {
-
-	const tID = ~ ~ ( offset / 2 );
-	const cID = offset % 2;
+function solveConstraints() {
 
 	mesh.material = constraintsShader;
-	constraintsShader.uniforms.length.value = PRE.vertices.length;
 	constraintsShader.uniforms.tSize.value = tSize;
-	constraintsShader.uniforms.cID.value = cID;
-	constraintsShader.uniforms.tOriginal.value = originalRT.texture;
 	constraintsShader.uniforms.tPosition.value = positionRT.texture;
-	constraintsShader.uniforms.tConstraints.value = constraintsRT[tID].texture;
+	constraintsShader.uniforms.tAdjacentsA.value = adjacentsRT[0].texture;
+	constraintsShader.uniforms.tAdjacentsB.value = adjacentsRT[1].texture;
+	constraintsShader.uniforms.tDistancesA.value = distancesRT[0].texture;
+	constraintsShader.uniforms.tDistancesB.value = distancesRT[1].texture;
 
 	renderer.setRenderTarget( targetRT );
 	renderer.render( scene, camera );
@@ -273,22 +252,16 @@ function mouseOffset() {
 
 }
 
-function computeVertexNormals( id ) {
+function computeVertexNormals( ) {
 
 	mesh.material = normalsShader;
-	normalsShader.uniforms.reset.value = ( id == 0 ) ? 1.0 : 0.0;
-	normalsShader.uniforms.length.value = PRE.vertices.length;
 	normalsShader.uniforms.tSize.value = tSize;
 	normalsShader.uniforms.tPosition.value = positionRT.texture;
-	normalsShader.uniforms.tNormal.value = normalsRT.texture;
-	normalsShader.uniforms.tFace.value = facesRT[id].texture;
+	normalsShader.uniforms.tAdjacentsA.value = adjacentsRT[0].texture;
+	normalsShader.uniforms.tAdjacentsB.value = adjacentsRT[1].texture;
 
-	renderer.setRenderTarget( ntargetRT );
+	renderer.setRenderTarget( normalsRT );
 	renderer.render( scene, camera );
-
-	const tmp = normalsRT;
-	normalsRT = ntargetRT;
-	ntargetRT = tmp;
 
 }
 
@@ -302,19 +275,11 @@ function update() {
 
 		if ( mouseUpdating && (i+5) < steps ) mouseOffset();
 
-		for ( let j = 0; j < 8; j++ ) {
-
-			solveConstraints( j );
-
-		}
+		solveConstraints();
 
 	}
 
-	for ( let i = 0; i < 6; i++ ) {
-
-		computeVertexNormals( i );
-
-	}
+	computeVertexNormals();
 
 }
 

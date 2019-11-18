@@ -1,13 +1,13 @@
 export default /* glsl */`
 precision highp float;
 
-
-uniform float dt;
 uniform vec2 tSize;
 
 uniform sampler2D tOriginal;
 uniform sampler2D tPrevious;
 uniform sampler2D tPosition;
+
+#define dt 0.016
 
 void main() {
 

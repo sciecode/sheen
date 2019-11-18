@@ -9,9 +9,7 @@ function init( scene ) {
 
 	RESOLUTION = Math.ceil( Math.sqrt( PRE.vertices.length ) );
 
-	const tl = new THREE.TextureLoader();
-
-	const bmp = tl.load( './src/textures/bmpMap.png' );
+	const bmp = new THREE.TextureLoader().load( './src/textures/bmpMap.png' );
 
 	const material = new THREE.MeshPhysicalMaterial( {
 

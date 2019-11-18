@@ -48,24 +48,23 @@ mouseShader.uniforms = {
 const constraintsShader = copyShader.clone();
 constraintsShader.fragmentShader = constraints_frag;
 constraintsShader.uniforms = {
-	cID: { value: null },
-	length: { value: null },
 	tSize: { type: 'v2' },
-	tOriginal: { type: 't' },
 	tPosition: { type: 't' },
-	tConstraints: { type: 't' }
+	tAdjacentsA: { type: 't' },
+	tAdjacentsB: { type: 't' },
+	tDistancesA: { type: 't' },
+	tDistancesB: { type: 't' }
 };
 
 // calculate normals
 const normalsShader = copyShader.clone();
 normalsShader.fragmentShader = normals_frag;
 normalsShader.uniforms = {
-	reset: { value: null },
-	length: { value: null },
 	tSize: { type: 'v2' },
 	tPosition: { type: 't' },
-	tNormal: { type: 't' },
-	tFace: { type: 't' },
+	tAdjacentsA: { type: 't' },
+	tAdjacentsB: { type: 't' }
+
 };
 
 export { copyShader, integrateShader, mouseShader, constraintsShader, normalsShader }

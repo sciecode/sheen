@@ -1,61 +1,70 @@
 export default /* glsl */`
 precision highp float;
 
-uniform int cID;
-uniform float length;
-
 uniform vec2 tSize;
-
 uniform sampler2D tPosition;
-uniform sampler2D tOriginal;
-uniform sampler2D tConstraints;
 
-vec2 getUV( float id ) {
+uniform sampler2D tDistancesA;
+uniform sampler2D tDistancesB;
 
-	float div = id / tSize.x;
-	float d = floor( div );
+uniform sampler2D tAdjacentsA;
+uniform sampler2D tAdjacentsB;
 
-	float y = d / tSize.x;
-	float x = div - d;
+// get vec2 tex coordinate from index
+vec2 getUV( float id ) { 
 
-	float off = 0.5 / tSize.x;
+	vec2 coords = vec2(
+		floor( mod( ( id + 0.5 ), tSize.x ) ),
+		floor( ( id + 0.5 ) / tSize.x )
+	) + 0.5;
 
-	return vec2( x + off, y + off );
+	return coords / tSize;
 
 }
 
-void main() {
+// compute offset based on current distance and spring rest distance
+vec3 getDisplacement( vec3 point0, vec3 point1, float restDistance ) {
 
+    float curDistance = distance( point0, point1 );
+	return 1.5 * ( curDistance - restDistance ) * ( point1 - point0 ) / curDistance;
+	
+}
+
+void main() {
+	
+	vec3 displacement;
 	vec2 uv = gl_FragCoord.xy / tSize.xy;
 
-	vec3 orgA = texture2D( tOriginal, uv ).xyz;
-	vec3 posA = texture2D( tPosition, uv ).xyz;
+	// indices of adjacent vertices
+	vec4 adjacentA = texture2D( tAdjacentsA, uv );
+	vec4 adjacentB = texture2D( tAdjacentsB, uv );
 
-	float idx;
+	// distances of adjacent vertices
+	vec4 distancesA = texture2D( tDistancesA, uv );
+	vec4 distancesB = texture2D( tDistancesB, uv );
+
+	// vertex position
+	vec3 p0 = texture2D( tPosition, uv ).xyz;
+
+	// adjacent vertices positions
+    vec3 p1 = texture2D( tPosition, getUV( adjacentA.x ) ).xyz;
+    vec3 p2 = texture2D( tPosition, getUV( adjacentA.y ) ).xyz;
+    vec3 p3 = texture2D( tPosition, getUV( adjacentA.z ) ).xyz;
+    vec3 p4 = texture2D( tPosition, getUV( adjacentA.w ) ).xyz;
+    vec3 p5 = texture2D( tPosition, getUV( adjacentB.x ) ).xyz;
+	vec3 p6 = texture2D( tPosition, getUV( adjacentB.y ) ).xyz;
 	
-	vec2 idxColor = ( cID == 0 ) ? texture2D( tConstraints, uv ).xy : texture2D( tConstraints, uv ).zw;
+	// spring-based displacement
+    displacement += getDisplacement( p0, p1, distancesA.x );
+    displacement += getDisplacement( p0, p2, distancesA.y );
+    displacement += getDisplacement( p0, p3, distancesA.z );
+    displacement += getDisplacement( p0, p4, distancesA.w );
+    displacement += getDisplacement( p0, p5, distancesB.x );
+    displacement += ( adjacentB.y > 0.0 ) ? getDisplacement( p0, p6, distancesB.y ) : vec3( 0 );
 
-	idx = idxColor.r * 255.0 + idxColor.g * 255.0 * 256.0;
+	p0 += 0.93 * displacement / ( ( adjacentB.y > 0.0 ) ? 6.0 : 5.0 );
 
-	uv = getUV( idx );
-
-	vec3 orgB = texture2D( tOriginal, uv ).xyz;
-	vec3 posB = texture2D( tPosition, uv ).xyz;
-
-	vec3 offOrg = ( orgB - orgA );
-	vec3 offCur = ( posB - posA );
-
-	float restDist = dot( offOrg, offOrg );
-	float curDist = dot( offCur, offCur );
-
-	float diff = restDist / ( curDist + restDist ) - 0.5;
-
-	if ( diff > 0.0 ) diff *= 0.25;
-	if ( idx > length ) diff = 0.0;
-
-	posA -= offCur * diff * 0.52;
-
-	gl_FragColor = vec4( posA, 1.0 );
+	gl_FragColor = vec4( p0, 1.0 );
 
 }
 `;

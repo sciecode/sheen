@@ -1,57 +1,62 @@
 export default /* glsl */`
 precision highp float;
 
-uniform int reset;
-uniform float length;
-
 uniform vec2 tSize;
 
 uniform sampler2D tPosition;
-uniform sampler2D tNormal;
-uniform sampler2D tFace;
 
-vec2 getUV( float id ) {
+uniform sampler2D tAdjacentsA;
+uniform sampler2D tAdjacentsB;
 
-	float div = id / tSize.x;
-	float d = floor( div );
+// get vec2 tex coordinate from index
+vec2 getUV( float id ) { 
 
-	float y = d / tSize.x;
-	float x = div - d;
+	vec2 coords = vec2(
+		floor( mod( ( id + 0.5 ), tSize.x ) ),
+		floor( ( id + 0.5 ) / tSize.x )
+	) + 0.5;
 
-	float off = 0.5 / tSize.x;
-
-	return vec2( x + off, y + off );
+	return coords / tSize;
 
 }
 
-void main() {
+void main () {
 
+    vec3 normal;
 	vec2 uv = gl_FragCoord.xy / tSize.xy;
-	vec3 a = texture2D( tPosition, uv ).xyz;
 
-	vec2 uvB, uvC;
-	vec3 fNormal, b, c;
+    // indices of adjacent vertices
+    vec4 adjacentsA = texture2D( tAdjacentsA, uv );
+    vec4 adjacentsB = texture2D( tAdjacentsB, uv );
 
-	vec3 normal = ( reset == 1 ) ? vec3( 0.0 ) : texture2D( tNormal, uv ).xyz;
+    // vertex position
+    vec3 p0 = texture2D( tPosition, uv ).xyz;
 
-	float idx;
+    // adjacent vertices positions
+    vec3 p1 = texture2D( tPosition, getUV( adjacentsA.x ) ).xyz;
+    vec3 p2 = texture2D( tPosition, getUV( adjacentsA.y ) ).xyz;
+    vec3 p3 = texture2D( tPosition, getUV( adjacentsA.z ) ).xyz;
+    vec3 p4 = texture2D( tPosition, getUV( adjacentsA.w ) ).xyz;
+    vec3 p5 = texture2D( tPosition, getUV( adjacentsB.x ) ).xyz;
+    vec3 p6 = texture2D( tPosition, getUV( adjacentsB.y ) ).xyz;
 
-	vec2 bColor = texture2D( tFace, uv ).xy;
-	idx = bColor.r * 255.0 + bColor.g * 255.0 * 256.0;
-	uvB = getUV( idx );
+    // compute vertex normal contribution
+    normal += cross( p1 - p0, p2 - p0 );
+    normal += cross( p2 - p0, p3 - p0 );
+    normal += cross( p3 - p0, p4 - p0 );
+    normal += cross( p4 - p0, p5 - p0 );
 
-	vec2 cColor = texture2D( tFace, uv ).zw;
-	idx = cColor.r * 255.0 + cColor.g * 255.0 * 256.0;
-	uvC = getUV( idx );
+    if ( adjacentsB.y > 0.0 ) {
 
-	b = texture2D( tPosition, uvB ).xyz;
-	c = texture2D( tPosition, uvC ).xyz;
+        normal += cross( p5 - p0, p6 - p0 );
+        normal += cross( p6 - p0, p1 - p0 );
 
-	fNormal = cross( ( c - b ), ( a - b ) );
+    } else {
 
-	if ( idx <= length ) normal += fNormal;
+        normal += cross( p5 - p0, p1 - p0 );
 
-	gl_FragColor = vec4( normal, 1.0 );
+    }
 
+    gl_FragColor = vec4( normalize( normal ), 1.0 );
 }
 `;

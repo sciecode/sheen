@@ -6,7 +6,7 @@ import * as LIGHTS from './modules/lights.js';
 import * as MOUSE from './modules/mouse.js';
 
 let
-renderer, camera, scene;
+renderer, camera, scene, stats;
 
 function init() {
 
@@ -28,10 +28,8 @@ function init() {
 	scene.background = new THREE.Color( 0x121312 );
 
 	// camera
-	camera = new THREE.PerspectiveCamera( 60, window.innerWidth/window.innerHeight, 1, 10000 );
-	camera.position.z = -350;
-	camera.position.y = -50;
-	camera.position.x = 0;
+	camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 1, 4000 );
+	camera.position.set( 0, - 50, - 350 );
 	camera.lookAt( new THREE.Vector3() );
 
 	// pre-calculate geometry information
@@ -45,7 +43,7 @@ function init() {
 	MOUSE.init( camera, renderer.domElement );
 	FBO.init( renderer );
 
-	// release mem for GC
+	// dispose of calculation data
 	PRE.dispose();
 
 	// start program
@@ -55,13 +53,13 @@ function init() {
 
 function animate() {
 
-	requestAnimationFrame( animate );
-
 	LIGHTS.update();
 	FBO.update();
 
 	renderer.setRenderTarget( null );
 	renderer.render( scene, camera );
+
+	requestAnimationFrame( animate );
 
 }
 
