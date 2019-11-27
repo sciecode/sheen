@@ -62,7 +62,7 @@ void main() {
     displacement += getDisplacement( p0, p5, distancesB.x );
     displacement += ( adjacentB.y > 0.0 ) ? getDisplacement( p0, p6, distancesB.y ) : vec3( 0 );
 
-	p0 += 0.93 * displacement / ( ( adjacentB.y > 0.0 ) ? 6.0 : 5.0 );
+	p0 += 0.95 * displacement / ( ( adjacentB.y > 0.0 ) ? 6.0 : 5.0 );
 
 	gl_FragColor = vec4( p0, 1.0 );
 

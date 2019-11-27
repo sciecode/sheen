@@ -13,22 +13,25 @@ canvas {
 	height: 100%;
 }
 
-footer {
+#footer {
 	position: absolute;
 	right: 4vw;
 	bottom: 5vh;
+	user-select: none;
 }
 
-h4.scie {
-	display: inline-block;
-	margin: 0;
-	color: #e4e5e6;
-	font-family: 'Open Sans', sans-serif;
-	font-size: 1.1rem;
+.footers, .footers a {
 	font-weight: 600;
-	letter-spacing: 1.2px;
-	user-select: none;
-	text-decoration: none;
+	display: inline-block;
+	color: #e4e5e6;
+	font-size: 14px;
 	text-rendering: optimizeLegibility;
 	-webkit-font-smoothing: subpixel-antialiased;
+	font-family: 'Open Sans', sans-serif;
+	letter-spacing: 1.1px;
+	user-select: none;
+}
+
+.footers a {
+	text-decoration: underline;
 }

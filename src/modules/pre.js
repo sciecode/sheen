@@ -4,10 +4,12 @@ geometry, adjacency, vertices;
 
 function calculate() {
 
-	const tmp = new THREE.IcosahedronBufferGeometry( 100, 5 );
+	const tmp = new THREE.IcosahedronBufferGeometry( 1000, 6 );
 
 	// icosahedron generates non-indexed vertices, we make use of graph adjacency.
-	geometry = THREE.BufferGeometryUtils.mergeVertices( tmp, 1.5 ); 
+	geometry = THREE.BufferGeometryUtils.mergeVertices( tmp, 1.2 ); 
+
+	geometry.scale( 0.1, 0.1, 0.1 );
 
 	populateVertices();
 
