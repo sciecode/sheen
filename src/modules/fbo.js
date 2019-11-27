@@ -14,7 +14,7 @@ RESOLUTION,
 renderer, mesh, targetRT, normalsRT,
 originalRT, previousRT, positionRT,
 adjacentsRT, distancesRT,
-steps = 80;
+steps = 50;
 
 
 const
