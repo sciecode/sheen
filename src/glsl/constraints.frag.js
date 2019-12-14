@@ -33,6 +33,21 @@ vec3 getDisplacement( vec3 point0, vec3 point1, float restDistance ) {
 	
 }
 
+// pack float16 position into float32
+vec3 packPosition( vec2 uv ) {
+
+	return ( texture2D( tPosition0, uv ).xyz + texture2D( tPosition1, uv ).xyz ) / 1024.0;
+
+}
+
+vec3 unpackPosition( vec3 pos ) {
+
+	pos *= 1024.0;
+
+	return ( order > 0.0 ) ? floor( pos ) : fract( pos );
+
+}
+
 void main() {
 	
 	vec3 displacement;
@@ -47,15 +62,15 @@ void main() {
 	vec4 distancesB = texture2D( tDistancesB, uv );
 
 	// vertex position
-	vec3 p0 = ( texture2D( tPosition0, uv ).xyz + texture2D( tPosition1, uv ).xyz ) / 1024.0;
+	vec3 p0 = packPosition( uv );
 
 	// adjacent vertices positions
-    vec3 p1 = ( texture2D( tPosition0, getUV( adjacentA.x ) ).xyz + texture2D( tPosition1, getUV( adjacentA.x ) ).xyz ) / 1024.0;
-    vec3 p2 = ( texture2D( tPosition0, getUV( adjacentA.y ) ).xyz + texture2D( tPosition1, getUV( adjacentA.y ) ).xyz ) / 1024.0;
-    vec3 p3 = ( texture2D( tPosition0, getUV( adjacentA.z ) ).xyz + texture2D( tPosition1, getUV( adjacentA.z ) ).xyz ) / 1024.0;
-    vec3 p4 = ( texture2D( tPosition0, getUV( adjacentA.w ) ).xyz + texture2D( tPosition1, getUV( adjacentA.w ) ).xyz ) / 1024.0;
-    vec3 p5 = ( texture2D( tPosition0, getUV( adjacentB.x ) ).xyz + texture2D( tPosition1, getUV( adjacentB.x ) ).xyz ) / 1024.0;
-	vec3 p6 = ( texture2D( tPosition0, getUV( adjacentB.y ) ).xyz + texture2D( tPosition1, getUV( adjacentB.y ) ).xyz ) / 1024.0;
+    vec3 p1 = packPosition( getUV( adjacentA.x ) );
+    vec3 p2 = packPosition( getUV( adjacentA.y ) );
+    vec3 p3 = packPosition( getUV( adjacentA.z ) );
+    vec3 p4 = packPosition( getUV( adjacentA.w ) );
+    vec3 p5 = packPosition( getUV( adjacentB.x ) );
+	vec3 p6 = packPosition( getUV( adjacentB.y ) );
 	
 	// spring-based displacement
     displacement += getDisplacement( p0, p1, distancesA.x );
@@ -67,9 +82,7 @@ void main() {
 
 	p0 += 0.76 * displacement / ( ( adjacentB.y > 0.0 ) ? 6.0 : 5.0 );
 
-	p0 *= 1024.0;
-
-	gl_FragColor = vec4( ( order > 0.0 ) ? floor( p0 ) : fract( p0 ), 1.0 );
+	gl_FragColor = vec4( unpackPosition( p0 ), 1.0 );
 
 }
 `;

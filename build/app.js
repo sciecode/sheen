@@ -316,6 +316,21 @@ vec3 getDisplacement( vec3 point0, vec3 point1, float restDistance ) {
 	
 }
 
+// pack float16 position into float32
+vec3 packPosition( vec2 uv ) {
+
+	return ( texture2D( tPosition0, uv ).xyz + texture2D( tPosition1, uv ).xyz ) / 1024.0;
+
+}
+
+vec3 unpackPosition( vec3 pos ) {
+
+	pos *= 1024.0;
+
+	return ( order > 0.0 ) ? floor( pos ) : fract( pos );
+
+}
+
 void main() {
 	
 	vec3 displacement;
@@ -330,15 +345,15 @@ void main() {
 	vec4 distancesB = texture2D( tDistancesB, uv );
 
 	// vertex position
-	vec3 p0 = ( texture2D( tPosition0, uv ).xyz + texture2D( tPosition1, uv ).xyz ) / 1024.0;
+	vec3 p0 = packPosition( uv );
 
 	// adjacent vertices positions
-    vec3 p1 = ( texture2D( tPosition0, getUV( adjacentA.x ) ).xyz + texture2D( tPosition1, getUV( adjacentA.x ) ).xyz ) / 1024.0;
-    vec3 p2 = ( texture2D( tPosition0, getUV( adjacentA.y ) ).xyz + texture2D( tPosition1, getUV( adjacentA.y ) ).xyz ) / 1024.0;
-    vec3 p3 = ( texture2D( tPosition0, getUV( adjacentA.z ) ).xyz + texture2D( tPosition1, getUV( adjacentA.z ) ).xyz ) / 1024.0;
-    vec3 p4 = ( texture2D( tPosition0, getUV( adjacentA.w ) ).xyz + texture2D( tPosition1, getUV( adjacentA.w ) ).xyz ) / 1024.0;
-    vec3 p5 = ( texture2D( tPosition0, getUV( adjacentB.x ) ).xyz + texture2D( tPosition1, getUV( adjacentB.x ) ).xyz ) / 1024.0;
-	vec3 p6 = ( texture2D( tPosition0, getUV( adjacentB.y ) ).xyz + texture2D( tPosition1, getUV( adjacentB.y ) ).xyz ) / 1024.0;
+    vec3 p1 = packPosition( getUV( adjacentA.x ) );
+    vec3 p2 = packPosition( getUV( adjacentA.y ) );
+    vec3 p3 = packPosition( getUV( adjacentA.z ) );
+    vec3 p4 = packPosition( getUV( adjacentA.w ) );
+    vec3 p5 = packPosition( getUV( adjacentB.x ) );
+	vec3 p6 = packPosition( getUV( adjacentB.y ) );
 	
 	// spring-based displacement
     displacement += getDisplacement( p0, p1, distancesA.x );
@@ -350,9 +365,7 @@ void main() {
 
 	p0 += 0.76 * displacement / ( ( adjacentB.y > 0.0 ) ? 6.0 : 5.0 );
 
-	p0 *= 1024.0;
-
-	gl_FragColor = vec4( ( order > 0.0 ) ? floor( p0 ) : fract( p0 ), 1.0 );
+	gl_FragColor = vec4( unpackPosition( p0 ), 1.0 );
 
 }
 `;
@@ -371,6 +384,14 @@ uniform sampler2D tPosition1;
 
 #define dt 0.016
 
+vec3 unpackPosition( vec3 pos ) {
+
+	pos *= 1024.0;
+
+	return ( order > 0.0 ) ? floor( pos ) : fract( pos );
+
+}
+
 void main() {
 
 	float dt2 = dt * dt;
@@ -384,9 +405,7 @@ void main() {
 	vec3 offset = ( org - pos ) * 20.5 * dt2 * 8.33333;
 	vec3 disp = ( pos - prv ) * 0.91 + pos;
 
-	vec3 res = ( disp + offset ) * 1024.0;
-
-	gl_FragColor = vec4( ( order > 0.0 ) ? floor( res ) : fract( res ), 1.0 );
+	gl_FragColor = vec4( unpackPosition( disp + offset ), 1.0 );
 
 }
 `;
@@ -415,11 +434,26 @@ vec2 getUV( float id ) {
 
 }
 
+// pack float16 position into float32
+vec3 packPosition( vec2 uv ) {
+
+	return ( texture2D( tPosition0, uv ).xyz + texture2D( tPosition1, uv ).xyz ) / 1024.0;
+
+}
+
+vec3 unpackPosition( vec3 pos ) {
+
+	pos *= 1024.0;
+
+	return ( order > 0.0 ) ? floor( pos ) : fract( pos );
+
+}
+
 void main() {
 
 	vec2 uv = gl_FragCoord.xy / tSize.xy;
 
-	vec3 pos = ( texture2D( tPosition0, uv ).xyz + texture2D( tPosition1, uv ).xyz ) / 1024.0 ;
+	vec3 pos = packPosition( uv );
 	vec3 org = texture2D( tOriginal, uv ).xyz;
 	vec3 ref = texture2D( tOriginal, getUV( psel ) ).xyz;
 
@@ -435,9 +469,7 @@ void main() {
 
 	}
 
-	pos *= 1024.0;
-
-	gl_FragColor = vec4( ( order > 0.0 ) ? floor( pos ) : fract( pos ), 1.0 );
+	gl_FragColor = vec4( unpackPosition( pos ), 1.0 );
 
 }
 `;
@@ -466,6 +498,13 @@ vec2 getUV( float id ) {
 
 }
 
+// pack float16 position into float32
+vec3 packPosition( vec2 uv ) {
+
+	return ( texture2D( tPosition0, uv ).xyz + texture2D( tPosition1, uv ).xyz ) / 1024.0;
+
+}
+
 void main () {
 
     vec3 normal;
@@ -479,12 +518,12 @@ void main () {
 	vec3 p0 = ( texture2D( tPosition0, uv ).xyz + texture2D( tPosition1, uv ).xyz ) / 1024.0;
 
 	// adjacent vertices positions
-    vec3 p1 = ( texture2D( tPosition0, getUV( adjacentA.x ) ).xyz + texture2D( tPosition1, getUV( adjacentA.x ) ).xyz ) / 1024.0;
-    vec3 p2 = ( texture2D( tPosition0, getUV( adjacentA.y ) ).xyz + texture2D( tPosition1, getUV( adjacentA.y ) ).xyz ) / 1024.0;
-    vec3 p3 = ( texture2D( tPosition0, getUV( adjacentA.z ) ).xyz + texture2D( tPosition1, getUV( adjacentA.z ) ).xyz ) / 1024.0;
-    vec3 p4 = ( texture2D( tPosition0, getUV( adjacentA.w ) ).xyz + texture2D( tPosition1, getUV( adjacentA.w ) ).xyz ) / 1024.0;
-    vec3 p5 = ( texture2D( tPosition0, getUV( adjacentB.x ) ).xyz + texture2D( tPosition1, getUV( adjacentB.x ) ).xyz ) / 1024.0;
-    vec3 p6 = ( texture2D( tPosition0, getUV( adjacentB.y ) ).xyz + texture2D( tPosition1, getUV( adjacentB.y ) ).xyz ) / 1024.0;
+    vec3 p1 = packPosition( getUV( adjacentA.x ) );
+    vec3 p2 = packPosition( getUV( adjacentA.y ) );
+    vec3 p3 = packPosition( getUV( adjacentA.z ) );
+    vec3 p4 = packPosition( getUV( adjacentA.w ) );
+    vec3 p5 = packPosition( getUV( adjacentB.x ) );
+	vec3 p6 = packPosition( getUV( adjacentB.y ) );
     
     // compute vertex normal contribution
     normal += cross( p1 - p0, p2 - p0 );
@@ -515,12 +554,19 @@ uniform vec2 tSize;
 uniform float order;
 uniform sampler2D texture;
 
+vec4 unpackPosition( vec4 pos ) {
+
+	pos *= 1024.0;
+
+	return ( order > 0.0 ) ? floor( pos ) : fract( pos );
+
+}
+
 void main() {
 
 	vec2 uv = gl_FragCoord.xy / tSize.xy;
 
-	vec4 img = texture2D( texture, uv ) * 1024.0;
-	gl_FragColor = ( order > 0.0 ) ? floor( img ) : fract( img );
+	gl_FragColor = unpackPosition( texture2D( texture, uv ) );
 
 }
 `;
@@ -640,9 +686,10 @@ function init$2( WebGLRenderer ) {
 	previousRT = new Array( 2 );
 	targetRT = new Array( 2 );
 
+	normalsRT = createRenderTarget();
+
 	// prepare
 	createPositionTexture();
-	normalsRT = createRenderTarget();
 
 	// setup relaxed vertices conditions
 	for ( let i = 0; i < 2; i++ ) {
@@ -878,7 +925,7 @@ function update() {
 
 	for ( let i = 0; i < steps; i++ ) {
 
-		if ( mouseUpdating && ( i + 5 ) < steps ) mouseOffset();
+		if ( mouseUpdating && i < steps - 5 ) mouseOffset();
 
 		solveConstraints();
 
@@ -905,7 +952,7 @@ function init$3( scene ) {
 
 		color: 0xffda20,
 		bumpMap: bmp,
-		bumpScale: 0.02,
+		bumpScale: 0.012,
 		metalness: 0.1,
 		roughness: 0.6,
 		clearcoat: 0.8,
@@ -920,7 +967,7 @@ function init$3( scene ) {
 		shader.uniforms.tPosition0 = { value: positionRT[ 0 ].texture };
 		shader.uniforms.tPosition1 = { value: positionRT[ 1 ].texture };
 		shader.uniforms.tNormal = { value: normalsRT.texture };
-		shader.vertexShader = 'precision highp sampler2D;\nuniform sampler2D tPosition0;uniform sampler2D tPosition1;\nuniform sampler2D tNormal;\n' + shader.vertexShader;
+		shader.vertexShader = 'precision highp sampler2D;\nuniform sampler2D tPosition0;\nuniform sampler2D tPosition1;\nuniform sampler2D tNormal;\n' + shader.vertexShader;
 		shader.vertexShader = shader.vertexShader.replace(
 			'#include <beginnormal_vertex>',
 			`vec3 transformed = ( texture2D( tPosition0, position.xy ).xyz + texture2D( tPosition1, position.xy ).xyz ) / 1024.0;
@@ -938,7 +985,7 @@ function init$3( scene ) {
 	depthMaterial.onBeforeCompile = function ( shader ) {
 		shader.uniforms.tPosition0 = { value: positionRT[ 0 ].texture };
 		shader.uniforms.tPosition1 = { value: positionRT[ 1 ].texture };
-		shader.vertexShader = 'precision highp sampler2D;\nuniform sampler2D tPosition0;uniform sampler2D tPosition1;\n' + shader.vertexShader;
+		shader.vertexShader = 'precision highp sampler2D;\nuniform sampler2D tPosition0;\nuniform sampler2D tPosition1;\n' + shader.vertexShader;
 		shader.vertexShader = shader.vertexShader.replace(
 			'#include <begin_vertex>',
 			`vec3 transformed = ( texture2D( tPosition0, position.xy ).xyz + texture2D( tPosition1, position.xy ).xyz ) / 1024.0;`
@@ -1031,14 +1078,13 @@ function update$1( ) {
 }
 
 let
-renderer$1, camera$2, scene$1;
+renderer$1, camera$2, scene$1, lastOrientation;
 
 function init$5() {
 
 	// renderer
 	renderer$1 = new THREE.WebGLRenderer( { antialias: true } );
 	renderer$1.setSize( window.innerWidth, window.innerHeight );
-	// renderer.setPixelRatio( window.devicePixelRatio );
 
 	renderer$1.gammaOutput = true;
 	renderer$1.physicallyCorrectLights = true;
@@ -1047,6 +1093,8 @@ function init$5() {
 	renderer$1.shadowMap.type = THREE.PCFShadowMap;
 
 	document.body.appendChild( renderer$1.domElement );
+
+	window.addEventListener( 'resize', onResize );
 
 	// scene
 	scene$1 = new THREE.Scene();
@@ -1078,6 +1126,13 @@ function init$5() {
 
 function animate() {
 
+	if ( window.orientation != lastOrientation ) {
+
+		lastOrientation = window.orientation;
+		onResize();
+
+	}
+
 	update$1();
 	update();
 
@@ -1088,7 +1143,7 @@ function animate() {
 
 }
 
-window.onresize = function() {
+function onResize() {
 
 	const w = window.innerWidth;
 	const h = window.innerHeight;
@@ -1098,6 +1153,5 @@ window.onresize = function() {
 
 	renderer$1.setSize( w, h );
 
-};
-
+}
 init$5();

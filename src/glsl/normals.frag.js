@@ -22,6 +22,13 @@ vec2 getUV( float id ) {
 
 }
 
+// pack float16 position into float32
+vec3 packPosition( vec2 uv ) {
+
+	return ( texture2D( tPosition0, uv ).xyz + texture2D( tPosition1, uv ).xyz ) / 1024.0;
+
+}
+
 void main () {
 
     vec3 normal;
@@ -35,12 +42,12 @@ void main () {
 	vec3 p0 = ( texture2D( tPosition0, uv ).xyz + texture2D( tPosition1, uv ).xyz ) / 1024.0;
 
 	// adjacent vertices positions
-    vec3 p1 = ( texture2D( tPosition0, getUV( adjacentA.x ) ).xyz + texture2D( tPosition1, getUV( adjacentA.x ) ).xyz ) / 1024.0;
-    vec3 p2 = ( texture2D( tPosition0, getUV( adjacentA.y ) ).xyz + texture2D( tPosition1, getUV( adjacentA.y ) ).xyz ) / 1024.0;
-    vec3 p3 = ( texture2D( tPosition0, getUV( adjacentA.z ) ).xyz + texture2D( tPosition1, getUV( adjacentA.z ) ).xyz ) / 1024.0;
-    vec3 p4 = ( texture2D( tPosition0, getUV( adjacentA.w ) ).xyz + texture2D( tPosition1, getUV( adjacentA.w ) ).xyz ) / 1024.0;
-    vec3 p5 = ( texture2D( tPosition0, getUV( adjacentB.x ) ).xyz + texture2D( tPosition1, getUV( adjacentB.x ) ).xyz ) / 1024.0;
-    vec3 p6 = ( texture2D( tPosition0, getUV( adjacentB.y ) ).xyz + texture2D( tPosition1, getUV( adjacentB.y ) ).xyz ) / 1024.0;
+    vec3 p1 = packPosition( getUV( adjacentA.x ) );
+    vec3 p2 = packPosition( getUV( adjacentA.y ) );
+    vec3 p3 = packPosition( getUV( adjacentA.z ) );
+    vec3 p4 = packPosition( getUV( adjacentA.w ) );
+    vec3 p5 = packPosition( getUV( adjacentB.x ) );
+	vec3 p6 = packPosition( getUV( adjacentB.y ) );
     
     // compute vertex normal contribution
     normal += cross( p1 - p0, p2 - p0 );

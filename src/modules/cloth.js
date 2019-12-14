@@ -18,7 +18,7 @@ function init( scene ) {
 
 		color: 0xffda20,
 		bumpMap: bmp,
-		bumpScale: 0.02,
+		bumpScale: 0.012,
 		metalness: 0.1,
 		roughness: 0.6,
 		clearcoat: 0.8,
@@ -33,7 +33,7 @@ function init( scene ) {
 		shader.uniforms.tPosition0 = { value: FBO.positionRT[ 0 ].texture };
 		shader.uniforms.tPosition1 = { value: FBO.positionRT[ 1 ].texture };
 		shader.uniforms.tNormal = { value: FBO.normalsRT.texture };
-		shader.vertexShader = 'precision highp sampler2D;\nuniform sampler2D tPosition0;uniform sampler2D tPosition1;\nuniform sampler2D tNormal;\n' + shader.vertexShader;
+		shader.vertexShader = 'precision highp sampler2D;\nuniform sampler2D tPosition0;\nuniform sampler2D tPosition1;\nuniform sampler2D tNormal;\n' + shader.vertexShader;
 		shader.vertexShader = shader.vertexShader.replace(
 			'#include <beginnormal_vertex>',
 			`vec3 transformed = ( texture2D( tPosition0, position.xy ).xyz + texture2D( tPosition1, position.xy ).xyz ) / 1024.0;
@@ -51,7 +51,7 @@ function init( scene ) {
 	depthMaterial.onBeforeCompile = function ( shader ) {
 		shader.uniforms.tPosition0 = { value: FBO.positionRT[ 0 ].texture };
 		shader.uniforms.tPosition1 = { value: FBO.positionRT[ 1 ].texture };
-		shader.vertexShader = 'precision highp sampler2D;\nuniform sampler2D tPosition0;uniform sampler2D tPosition1;\n' + shader.vertexShader;
+		shader.vertexShader = 'precision highp sampler2D;\nuniform sampler2D tPosition0;\nuniform sampler2D tPosition1;\n' + shader.vertexShader;
 		shader.vertexShader = shader.vertexShader.replace(
 			'#include <begin_vertex>',
 			`vec3 transformed = ( texture2D( tPosition0, position.xy ).xyz + texture2D( tPosition1, position.xy ).xyz ) / 1024.0;`

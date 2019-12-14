@@ -53,9 +53,10 @@ function init( WebGLRenderer ) {
 	previousRT = new Array( 2 );
 	targetRT = new Array( 2 );
 
+	normalsRT = createRenderTarget();
+
 	// prepare
 	createPositionTexture();
-	normalsRT = createRenderTarget();
 
 	// setup relaxed vertices conditions
 	for ( let i = 0; i < 2; i++ ) {
@@ -291,7 +292,7 @@ function update() {
 
 	for ( let i = 0; i < steps; i++ ) {
 
-		if ( mouseUpdating && ( i + 5 ) < steps ) mouseOffset();
+		if ( mouseUpdating && i < steps - 5 ) mouseOffset();
 
 		solveConstraints();
 
