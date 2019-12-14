@@ -21,12 +21,12 @@ function init( scene ) {
 
 	const spotLight3 = new THREE.SpotLight( 0xffffff, 0, 4000, Math.PI/5.5, 1.4, 0.08 );
 	spotLight3.baseIntensity = 1.5;
-	spotLight3.position.set( 0, 0, - 1 ).multiplyScalar( 400 );
+	spotLight3.position.set( 0, 0, - 1 ).multiplyScalar( 4 );
 	spotLight3.castShadow = true;
-	spotLight3.shadow.radius = 5;
+	spotLight3.shadow.radius = 3;
 	spotLight3.shadow.camera.far = 4000;
-	spotLight3.shadow.mapSize.height = 1024;
-	spotLight3.shadow.mapSize.width = 1024;
+	spotLight3.shadow.mapSize.height = 256;
+	spotLight3.shadow.mapSize.width = 256;
 
 	const directionalLight = new THREE.DirectionalLight( 0xffffff, 0 );
 	directionalLight.baseIntensity = 0.3;

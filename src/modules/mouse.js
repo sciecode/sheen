@@ -10,8 +10,8 @@ mouse = new THREE.Vector2(),
 tmpmouse = new THREE.Vector3(),
 mouse3d = new THREE.Vector3(),
 raycaster = new THREE.Raycaster(),
-plane = new THREE.Plane( undefined, -180 ),
-sphere = new THREE.Sphere( undefined, 100 );
+plane = new THREE.Plane( undefined, -1.8 ),
+sphere = new THREE.Sphere( undefined, 1 );
 
 
 function init( PerspectiveCamera ) {
@@ -22,6 +22,10 @@ function init( PerspectiveCamera ) {
 	window.addEventListener('mousedown', onMouseDown );
 	window.addEventListener('mouseout', onMouseOut );
 	window.addEventListener('mouseup', onMouseUp );
+
+	window.addEventListener('touchmove', onTouchMove, { passive: false } );
+	window.addEventListener('touchstart', onTouchDown );
+	window.addEventListener('touchend', onTouchUp );
 
 }
 
@@ -96,6 +100,31 @@ function onMouseUp( evt ) {
 }
 
 function onMouseOut() {
+
+	interacting = false;
+	psel = undefined;
+
+}
+
+function onTouchMove( evt ) {
+
+	evt.preventDefault();
+
+	mouse.x = (evt.touches[0].pageX / window.innerWidth) * 2 - 1;
+	mouse.y = -(evt.touches[0].pageY / window.innerHeight) * 2 + 1;
+
+}
+
+function onTouchDown( evt ) {
+
+	interacting = true;
+
+	mouse.x = (evt.touches[0].pageX / window.innerWidth) * 2 - 1;
+	mouse.y = -(evt.touches[0].pageY / window.innerHeight) * 2 + 1;
+
+}
+
+function onTouchUp( ) {
 
 	interacting = false;
 	psel = undefined;

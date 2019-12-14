@@ -14,7 +14,7 @@ RESOLUTION,
 renderer, mesh, targetRT, normalsRT,
 originalRT, previousRT, positionRT,
 adjacentsRT, distancesRT,
-steps = 50;
+steps = 40;
 
 
 const
@@ -47,40 +47,37 @@ function init( WebGLRenderer ) {
 
 	scene.updateMatrixWorld = function() {};
 
-	// render targets
-	originalRT = createRenderTarget();
-	targetRT = createRenderTarget();
-	previousRT = createRenderTarget();
-	positionRT = createRenderTarget();
-	normalsRT = createRenderTarget();
-
-	adjacentsRT = Array.from( { length: 2 }, createRenderTarget );
-	distancesRT = Array.from( { length: 2 }, createRenderTarget );
+	adjacentsRT = new Array( 2 );
+	distancesRT = new Array( 2 );
+	positionRT = new Array( 2 );
+	previousRT = new Array( 2 );
+	targetRT = new Array( 2 );
 
 	// prepare
-	copyTexture( createPositionTexture( ), originalRT );
-	copyTexture( originalRT, previousRT );
-	copyTexture( originalRT, positionRT );
+	createPositionTexture();
+	normalsRT = createRenderTarget();
 
 	// setup relaxed vertices conditions
 	for ( let i = 0; i < 2; i++ ) {
 
-		copyTexture( createAdjacentsTexture( i*4 ), adjacentsRT[i] );
+		createAdjacentsTexture( i );
+		createDistancesTexture( i );
 
-	}
+		positionRT[ i ] = createRenderTarget();
+		previousRT[ i ] = createRenderTarget();
+		targetRT[ i ] = createRenderTarget();
 
-	// setup vertices original distances
-	for ( let i = 0; i < 2; i++ ) {
-
-		copyTexture( createDistancesTexture( i*4 ), distancesRT[i] );
+		copyTexture( originalRT, positionRT[ i ], !i );
+		copyTexture( originalRT, previousRT[ i ], !i );
 
 	}
 
 }
 
-function copyTexture( input, output ) {
+function copyTexture( input, output, order ) {
 
 	mesh.material = copyShader;
+	copyShader.uniforms.order.value = ( order ) ? 1 : - 1;
 	copyShader.uniforms.tSize.value = tSize;
 	copyShader.uniforms.texture.value = input.texture;
 
@@ -92,16 +89,8 @@ function copyTexture( input, output ) {
 function createRenderTarget( ) {
 
 	return new THREE.WebGLRenderTarget( RESOLUTION, RESOLUTION, {
-		wrapS: THREE.ClampToEdgeWrapping,
-		wrapT: THREE.ClampToEdgeWrapping,
-		minFilter: THREE.NearestFilter,
-		magFilter: THREE.NearestFilter,
 		format: THREE.RGBAFormat,
-		type: THREE.FloatType,
-		depthTest: false,
-		depthWrite: false,
-		depthBuffer: false,
-		stencilBuffer: false
+		type: THREE.HalfFloatType
 	} );
 
 }
@@ -123,13 +112,9 @@ function createPositionTexture( ) {
 
 	const tmp = {};
 	tmp.texture = new THREE.DataTexture( data, RESOLUTION, RESOLUTION, THREE.RGBAFormat, THREE.FloatType );
-	tmp.texture.minFilter = THREE.NearestFilter;
-	tmp.texture.magFilter = THREE.NearestFilter;
 	tmp.texture.needsUpdate = true;
-	tmp.texture.generateMipmaps = false;
-	tmp.texture.flipY = false;
 
-	return tmp;
+	originalRT = tmp;
 
 }
 
@@ -142,24 +127,18 @@ function createAdjacentsTexture( k ) {
 
 		const i4 = i * 4;
 		const adj = PRE.adjacency[ i ];
-		const len = PRE.adjacency[ i ].length;
+		const len = PRE.adjacency[ i ].length - 1;
 
-		data[ i4 + 0 ] = adj[ k + 0 ];
-		data[ i4 + 1 ] = ( len < 6 && k > 0 ) ? - 1 : adj[ k + 1 ];
-		data[ i4 + 2 ] = ( k > 0 ) ? - 1 : adj[ k + 2 ];
-		data[ i4 + 3 ] = ( k > 0 ) ? - 1 : adj[ k + 3 ];
+		for ( let j = 0; j < 4; j++ )
+			data[ i4 + j ] = ( len < k * 4 + j ) ? - 1 : adj[ k * 4 + j ];
 
 	}
 
 	const tmp = {};
 	tmp.texture = new THREE.DataTexture( data, RESOLUTION, RESOLUTION, THREE.RGBAFormat, THREE.FloatType );
-	tmp.texture.minFilter = THREE.NearestFilter;
-	tmp.texture.magFilter = THREE.NearestFilter;
 	tmp.texture.needsUpdate = true;
-	tmp.texture.generateMipmaps = false;
-	tmp.texture.flipY = false;
 
-	return tmp;
+	adjacentsRT[ k ] = tmp;
 
 }
 
@@ -174,26 +153,20 @@ function createDistancesTexture( k ) {
 
 		const i4 = i * 4;
 		const adj = PRE.adjacency[ i ];
-		const len = PRE.adjacency[ i ].length;
+		const len = PRE.adjacency[ i ].length - 1;
 
-		const v = vert[i];
+		const v = vert[ i ];
 
-		data[ i4 + 0 ] = v.distanceTo( vert[ adj[ k + 0 ] ] );
-		data[ i4 + 1 ] = ( len < 6 && k > 0 ) ? - 1 : v.distanceTo( vert[ adj[ k + 1 ] ] );
-		data[ i4 + 2 ] = ( k > 0 ) ? - 1 : v.distanceTo( vert[ adj[ k + 2 ] ] );
-		data[ i4 + 3 ] = ( k > 0 ) ? - 1 : v.distanceTo( vert[ adj[ k + 3 ] ] );
+		for ( let j = 0; j < 4; j++ )
+			data[ i4 + j ] = ( len < k * 4 + j ) ? - 1 : v.distanceTo( vert[ adj[ k * 4 + j ] ] );
 
 	}
 
 	const tmp = {};
 	tmp.texture = new THREE.DataTexture( data, RESOLUTION, RESOLUTION, THREE.RGBAFormat, THREE.FloatType );
-	tmp.texture.minFilter = THREE.NearestFilter;
-	tmp.texture.magFilter = THREE.NearestFilter;
 	tmp.texture.needsUpdate = true;
-	tmp.texture.generateMipmaps = false;
-	tmp.texture.flipY = false;
 
-	return tmp;
+	distancesRT[ k ] = tmp;
 
 }
 
@@ -202,16 +175,32 @@ function integrate() {
 	mesh.material = integrateShader;
 	integrateShader.uniforms.tSize.value = tSize;
 	integrateShader.uniforms.tOriginal.value = originalRT.texture;
-	integrateShader.uniforms.tPrevious.value = previousRT.texture;
-	integrateShader.uniforms.tPosition.value = positionRT.texture;
+	integrateShader.uniforms.tPrevious0.value = previousRT[ 0 ].texture;
+	integrateShader.uniforms.tPrevious1.value = previousRT[ 1 ].texture;
+	integrateShader.uniforms.tPosition0.value = positionRT[ 0 ].texture;
+	integrateShader.uniforms.tPosition1.value = positionRT[ 1 ].texture;
 
-	renderer.setRenderTarget( targetRT );
+	// integer-part
+	integrateShader.uniforms.order.value = 1;
+	renderer.setRenderTarget( targetRT[ 0 ] );
 	renderer.render( scene, camera );
 
-	const tmp = previousRT;
-	previousRT = positionRT;
-	positionRT = targetRT;
-	targetRT = tmp;
+	// fraction-part
+	integrateShader.uniforms.order.value = -1;
+	renderer.setRenderTarget( targetRT[ 1 ] );
+	renderer.render( scene, camera );
+
+
+	// swap framebuffers
+	let tmp = previousRT[ 0 ];
+	previousRT[ 0 ] = positionRT[ 0 ];
+	positionRT[ 0 ] = targetRT[ 0 ];
+	targetRT[ 0 ] = tmp;
+
+	tmp = previousRT[ 1 ];
+	previousRT[ 1 ] = positionRT[ 1 ];
+	positionRT[ 1 ] = targetRT[ 1 ];
+	targetRT[ 1 ] = tmp;
 
 }
 
@@ -219,18 +208,32 @@ function solveConstraints() {
 
 	mesh.material = constraintsShader;
 	constraintsShader.uniforms.tSize.value = tSize;
-	constraintsShader.uniforms.tPosition.value = positionRT.texture;
-	constraintsShader.uniforms.tAdjacentsA.value = adjacentsRT[0].texture;
-	constraintsShader.uniforms.tAdjacentsB.value = adjacentsRT[1].texture;
-	constraintsShader.uniforms.tDistancesA.value = distancesRT[0].texture;
-	constraintsShader.uniforms.tDistancesB.value = distancesRT[1].texture;
+	constraintsShader.uniforms.tPosition0.value = positionRT[ 0 ].texture;
+	constraintsShader.uniforms.tPosition1.value = positionRT[ 1 ].texture;
+	constraintsShader.uniforms.tAdjacentsA.value = adjacentsRT[ 0 ].texture;
+	constraintsShader.uniforms.tAdjacentsB.value = adjacentsRT[ 1 ].texture;
+	constraintsShader.uniforms.tDistancesA.value = distancesRT[ 0 ].texture;
+	constraintsShader.uniforms.tDistancesB.value = distancesRT[ 1 ].texture;
 
-	renderer.setRenderTarget( targetRT );
+	// integer-part
+	constraintsShader.uniforms.order.value = 1;
+	renderer.setRenderTarget( targetRT[ 0 ] );
 	renderer.render( scene, camera );
 
-	const tmp = positionRT;
-	positionRT = targetRT;
-	targetRT = tmp;
+	// fraction-part
+	constraintsShader.uniforms.order.value = -1;
+	renderer.setRenderTarget( targetRT[ 1 ] );
+	renderer.render( scene, camera );
+
+
+	// swap framebuffers
+	let tmp = positionRT[ 0 ];
+	positionRT[ 0 ] = targetRT [ 0 ];
+	targetRT[ 0 ] = tmp;
+
+	tmp = positionRT[ 1 ];
+	positionRT[ 1 ] = targetRT [ 1 ];
+	targetRT[ 1 ] = tmp;
 
 }
 
@@ -241,14 +244,28 @@ function mouseOffset() {
 	mouseShader.uniforms.psel.value = MOUSE.psel;
 	mouseShader.uniforms.mouse.value = MOUSE.mouse3d;
 	mouseShader.uniforms.tOriginal.value = originalRT.texture;
-	mouseShader.uniforms.tPosition.value = positionRT.texture;
+	mouseShader.uniforms.tPosition0.value = positionRT[ 0 ].texture;
+	mouseShader.uniforms.tPosition1.value = positionRT[ 1 ].texture;
 
-	renderer.setRenderTarget( targetRT );
+	// integer-part
+	mouseShader.uniforms.order.value = 1;
+	renderer.setRenderTarget( targetRT[ 0 ] );
 	renderer.render( scene, camera );
 
-	const tmp = positionRT;
-	positionRT = targetRT;
-	targetRT = tmp;
+	// fraction-part
+	mouseShader.uniforms.order.value = -1;
+	renderer.setRenderTarget( targetRT[ 1 ] );
+	renderer.render( scene, camera );
+
+
+	// swap framebuffers
+	let tmp = positionRT[ 0 ];
+	positionRT[ 0 ] = targetRT [ 0 ];
+	targetRT[ 0 ] = tmp;
+
+	tmp = positionRT[ 1 ];
+	positionRT[ 1 ] = targetRT [ 1 ];
+	targetRT[ 1 ] = tmp;
 
 }
 
@@ -256,9 +273,10 @@ function computeVertexNormals( ) {
 
 	mesh.material = normalsShader;
 	normalsShader.uniforms.tSize.value = tSize;
-	normalsShader.uniforms.tPosition.value = positionRT.texture;
-	normalsShader.uniforms.tAdjacentsA.value = adjacentsRT[0].texture;
-	normalsShader.uniforms.tAdjacentsB.value = adjacentsRT[1].texture;
+	normalsShader.uniforms.tPosition0.value = positionRT[ 0 ].texture;
+	normalsShader.uniforms.tPosition1.value = positionRT[ 1 ].texture;
+	normalsShader.uniforms.tAdjacentsA.value = adjacentsRT[ 0 ].texture;
+	normalsShader.uniforms.tAdjacentsB.value = adjacentsRT[ 1 ].texture;
 
 	renderer.setRenderTarget( normalsRT );
 	renderer.render( scene, camera );
@@ -273,7 +291,7 @@ function update() {
 
 	for ( let i = 0; i < steps; i++ ) {
 
-		if ( mouseUpdating && (i+5) < steps ) mouseOffset();
+		if ( mouseUpdating && ( i + 5 ) < steps ) mouseOffset();
 
 		solveConstraints();
 

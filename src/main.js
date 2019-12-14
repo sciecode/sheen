@@ -6,14 +6,14 @@ import * as LIGHTS from './modules/lights.js';
 import * as MOUSE from './modules/mouse.js';
 
 let
-renderer, camera, scene, stats;
+renderer, camera, scene;
 
 function init() {
 
 	// renderer
 	renderer = new THREE.WebGLRenderer( { antialias: true } );
 	renderer.setSize( window.innerWidth, window.innerHeight );
-	renderer.setPixelRatio( window.devicePixelRatio );
+	// renderer.setPixelRatio( window.devicePixelRatio );
 
 	renderer.gammaOutput = true;
 	renderer.physicallyCorrectLights = true;
@@ -28,8 +28,8 @@ function init() {
 	scene.background = new THREE.Color( 0x121312 );
 
 	// camera
-	camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 1, 4000 );
-	camera.position.set( 0, - 50, - 350 );
+	camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 0.1, 4000 );
+	camera.position.set( 0, - 0.5, - 3.5 );
 	camera.lookAt( new THREE.Vector3() );
 
 	// pre-calculate geometry information

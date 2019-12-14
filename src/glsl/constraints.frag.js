@@ -1,8 +1,11 @@
 export default /* glsl */`
 precision highp float;
+precision highp sampler2D;
 
 uniform vec2 tSize;
-uniform sampler2D tPosition;
+uniform float order;
+uniform sampler2D tPosition0;
+uniform sampler2D tPosition1;
 
 uniform sampler2D tDistancesA;
 uniform sampler2D tDistancesB;
@@ -44,15 +47,15 @@ void main() {
 	vec4 distancesB = texture2D( tDistancesB, uv );
 
 	// vertex position
-	vec3 p0 = texture2D( tPosition, uv ).xyz;
+	vec3 p0 = ( texture2D( tPosition0, uv ).xyz + texture2D( tPosition1, uv ).xyz ) / 1024.0;
 
 	// adjacent vertices positions
-    vec3 p1 = texture2D( tPosition, getUV( adjacentA.x ) ).xyz;
-    vec3 p2 = texture2D( tPosition, getUV( adjacentA.y ) ).xyz;
-    vec3 p3 = texture2D( tPosition, getUV( adjacentA.z ) ).xyz;
-    vec3 p4 = texture2D( tPosition, getUV( adjacentA.w ) ).xyz;
-    vec3 p5 = texture2D( tPosition, getUV( adjacentB.x ) ).xyz;
-	vec3 p6 = texture2D( tPosition, getUV( adjacentB.y ) ).xyz;
+    vec3 p1 = ( texture2D( tPosition0, getUV( adjacentA.x ) ).xyz + texture2D( tPosition1, getUV( adjacentA.x ) ).xyz ) / 1024.0;
+    vec3 p2 = ( texture2D( tPosition0, getUV( adjacentA.y ) ).xyz + texture2D( tPosition1, getUV( adjacentA.y ) ).xyz ) / 1024.0;
+    vec3 p3 = ( texture2D( tPosition0, getUV( adjacentA.z ) ).xyz + texture2D( tPosition1, getUV( adjacentA.z ) ).xyz ) / 1024.0;
+    vec3 p4 = ( texture2D( tPosition0, getUV( adjacentA.w ) ).xyz + texture2D( tPosition1, getUV( adjacentA.w ) ).xyz ) / 1024.0;
+    vec3 p5 = ( texture2D( tPosition0, getUV( adjacentB.x ) ).xyz + texture2D( tPosition1, getUV( adjacentB.x ) ).xyz ) / 1024.0;
+	vec3 p6 = ( texture2D( tPosition0, getUV( adjacentB.y ) ).xyz + texture2D( tPosition1, getUV( adjacentB.y ) ).xyz ) / 1024.0;
 	
 	// spring-based displacement
     displacement += getDisplacement( p0, p1, distancesA.x );
@@ -62,9 +65,11 @@ void main() {
     displacement += getDisplacement( p0, p5, distancesB.x );
     displacement += ( adjacentB.y > 0.0 ) ? getDisplacement( p0, p6, distancesB.y ) : vec3( 0 );
 
-	p0 += 0.95 * displacement / ( ( adjacentB.y > 0.0 ) ? 6.0 : 5.0 );
+	p0 += 0.76 * displacement / ( ( adjacentB.y > 0.0 ) ? 6.0 : 5.0 );
 
-	gl_FragColor = vec4( p0, 1.0 );
+	p0 *= 1024.0;
+
+	gl_FragColor = vec4( ( order > 0.0 ) ? floor( p0 ) : fract( p0 ), 1.0 );
 
 }
 `;
