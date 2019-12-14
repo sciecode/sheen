@@ -1016,7 +1016,8 @@ function init$3( scene ) {
 }
 
 let
-objects;
+objects,
+finished;
 
 const
 clock = new THREE.Clock();
@@ -1054,6 +1055,8 @@ function init$4( scene ) {
 	scene.add( ambientLight, spotLight, spotLight2, spotLight3, directionalLight, directionalLight2 );
 	objects = [ ambientLight, spotLight, spotLight2, spotLight3, directionalLight, directionalLight2 ];
 
+	finished = false;
+
 }
 
 function easing( t, c ) {
@@ -1061,17 +1064,28 @@ function easing( t, c ) {
 	return c / 2 * ( ( t -= 2 ) * t * t + 2 );
 }
 
+function updateLights( time ) {
+
+	for ( let i = 0; i < objects.length; i++ )
+		objects[ i ].intensity = objects[ i ].baseIntensity * easing( ( time - 1 ) / 3, 1.0 );
+
+}
+
 function update$1( ) {
+
+	if ( finished ) return;
 
 	const time = clock.getElapsedTime();
 
 	if ( time > 1 && time < 4 ) {
 
-		for ( let i = 0; i < objects.length; i++ ) {
+		updateLights( time );
 
-			objects[ i ].intensity = objects[ i ].baseIntensity * easing( ( time - 1 ) / 3, 1.0 );
+	} else if ( time > 4 ) {
 
-		}
+		updateLights( 4 );
+
+		finished = true;
 
 	}
 
@@ -1110,7 +1124,6 @@ function init$5() {
 
 	// initialization block;
 	init( scene$1 );
-	init$4( scene$1 );
 	init$3( scene$1 );
 
 	init$1( camera$2, renderer$1.domElement );
@@ -1118,6 +1131,9 @@ function init$5() {
 
 	// dispose of calculation data
 	dispose();
+
+	// initialize light
+	init$4( scene$1 );
 
 	// start program
 	animate();
