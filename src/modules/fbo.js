@@ -90,8 +90,16 @@ function copyTexture( input, output, order ) {
 function createRenderTarget( ) {
 
 	return new THREE.WebGLRenderTarget( RESOLUTION, RESOLUTION, {
+		wrapS: THREE.ClampToEdgeWrapping,
+		wrapT: THREE.ClampToEdgeWrapping,
+		minFilter: THREE.NearestFilter,
+		magFilter: THREE.NearestFilter,
 		format: THREE.RGBAFormat,
-		type: THREE.HalfFloatType
+		type: THREE.HalfFloatType,
+		depthTest: false,
+		depthWrite: false,
+		depthBuffer: false,
+		stencilBuffer: false
 	} );
 
 }
