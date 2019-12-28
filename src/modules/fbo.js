@@ -250,8 +250,8 @@ function mouseOffset() {
 
 	mesh.material = mouseShader;
 	mouseShader.uniforms.tSize.value = tSize;
-	mouseShader.uniforms.psel.value = MOUSE.psel;
-	mouseShader.uniforms.mouse.value = MOUSE.mouse3d;
+	mouseShader.uniforms.vertices.value = MOUSE.vertices;
+	mouseShader.uniforms.coordinates.value = MOUSE.coordinates;
 	mouseShader.uniforms.tOriginal.value = originalRT.texture;
 	mouseShader.uniforms.tPosition0.value = positionRT[ 0 ].texture;
 	mouseShader.uniforms.tPosition1.value = positionRT[ 1 ].texture;

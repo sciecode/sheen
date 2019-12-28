@@ -1,6 +1,6 @@
 {
   "name": "Sheen",
-  "version": "0.98.0",
+  "version": "1.0.0",
   "description": "GPGPU Cloth Simulation",
   "main": "src/main.js",
   "scripts": {

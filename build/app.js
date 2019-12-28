@@ -138,13 +138,12 @@ function dispose() {
 
 }
 
-let
-camera,
-interacting = false,
-psel = undefined;
+let camera;
 
 const
-mouse = new THREE.Vector2(),
+pointers = {},
+vertices$1 = new Array( 3 ),
+coordinates = new Array( 3 ),
 tmpmouse = new THREE.Vector3(),
 mouse3d = new THREE.Vector3(),
 raycaster = new THREE.Raycaster(),
@@ -155,6 +154,7 @@ sphere = new THREE.Sphere( undefined, 1 );
 function init$1( PerspectiveCamera ) {
 
 	camera = PerspectiveCamera;
+	plane.normal.copy( camera.position ).normalize();
 
 	window.addEventListener('mousemove', onMouseMove );
 	window.addEventListener('mousedown', onMouseDown );
@@ -162,32 +162,37 @@ function init$1( PerspectiveCamera ) {
 	window.addEventListener('mouseup', onMouseUp );
 
 	window.addEventListener('touchmove', onTouchMove, { passive: false } );
-	window.addEventListener('touchstart', onTouchDown );
+	window.addEventListener('touchstart', onTouchDown, { passive: false } );
 	window.addEventListener('touchend', onTouchUp );
 
 }
 
 function updating() {
 
-	if ( ! interacting ) return false;
+	let count = 0;
+	let isUpdating = false;
 
-	raycaster.setFromCamera( mouse, camera );
+	for ( let [ key, value ] of Object.entries( pointers ) ) {
 
-	if ( raycaster.ray.intersectSphere( sphere, tmpmouse ) != null ) {
+		let mouse = value.screenCoordinate;
 
-		mouse3d.copy( tmpmouse );
+		raycaster.setFromCamera( mouse, camera );
 
-		if ( psel == undefined ) {
+		if ( value.vertex === undefined &&
+			 raycaster.ray.intersectSphere( sphere, tmpmouse ) != null ) {
+
+			mouse3d.copy( tmpmouse );
 
 			let dist = Infinity;
-			for ( let i = 0; i < vertices.length; i++ ) {
+
+			for ( let i = 0; i < vertices.length; ++i ) {
 
 				const tmp = mouse3d.distanceTo( vertices[ i ] );
 
 				if ( tmp < dist ) {
 
 					dist = tmp;
-					psel = i;
+					value.vertex = i;
 
 				}
 
@@ -195,24 +200,42 @@ function updating() {
 
 		}
 
+		if ( value.vertex !== undefined ) {
+			
+			isUpdating = true;
+			raycaster.ray.intersectPlane( plane, tmpmouse );
+			value.worldCoordinate.copy( tmpmouse );
+
+			vertices$1[ count ] = value.vertex;
+			coordinates[ count ] = value.worldCoordinate;
+
+			count++;
+
+		}
+
 	}
 
-	plane.normal.copy( camera.position ).normalize();
+	while ( count < 3 ) {
 
-	if ( raycaster.ray.intersectPlane( plane, tmpmouse ) != null ) {
+		vertices$1[ count ] = -1;
+		coordinates[ count ] = mouse3d;
 
-		mouse3d.copy( tmpmouse );
+		count++;
 
 	}
 
-	return ( interacting && psel ) ? true : false;
+	return ( isUpdating ) ? true : false;
 
 }
 
 function onMouseMove( evt ) {
 
-	mouse.x = (evt.pageX / window.innerWidth) * 2 - 1;
-	mouse.y = -(evt.pageY / window.innerHeight) * 2 + 1;
+	if ( pointers[ 'mouse' ] !== undefined ) {
+
+		pointers[ 'mouse' ].screenCoordinate.x = ( evt.pageX / window.innerWidth ) * 2 - 1;
+		pointers[ 'mouse' ].screenCoordinate.y = - ( evt.pageY / window.innerHeight ) * 2 + 1;
+
+	}
 
 }
 
@@ -220,7 +243,15 @@ function onMouseDown( evt ) {
 
 	if ( evt.button == 0 ) {
 
-		interacting = true;
+		pointers[ 'mouse' ] = { 
+
+			vertex: undefined,
+			screenCoordinate: new THREE.Vector2(),
+			worldCoordinate: new THREE.Vector3()
+
+		};
+
+		onMouseMove( evt );
 
 	}
 
@@ -230,8 +261,7 @@ function onMouseUp( evt ) {
 
 	if ( evt.button == 0 ) {
 
-		interacting = false;
-		psel = undefined;
+		delete pointers[ 'mouse' ];
 
 	}
 
@@ -239,8 +269,7 @@ function onMouseUp( evt ) {
 
 function onMouseOut() {
 
-	interacting = false;
-	psel = undefined;
+	delete pointers[ 'mouse' ];
 
 }
 
@@ -248,24 +277,46 @@ function onTouchMove( evt ) {
 
 	evt.preventDefault();
 
-	mouse.x = (evt.touches[0].pageX / window.innerWidth) * 2 - 1;
-	mouse.y = -(evt.touches[0].pageY / window.innerHeight) * 2 + 1;
+	for ( let i = 0; i < evt.changedTouches.length; ++i ) {
+
+		let touch = evt.changedTouches[ i ];
+
+		pointers[ touch.identifier ].screenCoordinate.x = ( touch.pageX / window.innerWidth ) * 2 - 1;
+		pointers[ touch.identifier ].screenCoordinate.y = - ( touch.pageY / window.innerHeight ) * 2 + 1;
+
+	}
 
 }
 
 function onTouchDown( evt ) {
 
-	interacting = true;
+	for ( let i = 0; i < evt.changedTouches.length; ++i ) {
 
-	mouse.x = (evt.touches[0].pageX / window.innerWidth) * 2 - 1;
-	mouse.y = -(evt.touches[0].pageY / window.innerHeight) * 2 + 1;
+		let touch = evt.changedTouches[ i ];
+
+		pointers[ touch.identifier ] = { 
+
+			vertex: undefined,
+			screenCoordinate: new THREE.Vector2(),
+			worldCoordinate: new THREE.Vector3()
+
+		};
+
+	}
+
+	onTouchMove( evt );
 
 }
 
-function onTouchUp( ) {
+function onTouchUp( evt ) {
 
-	interacting = false;
-	psel = undefined;
+	for ( let i = 0; i < evt.changedTouches.length; ++i ) {
+
+		let touch = evt.changedTouches[ i ];
+
+		delete pointers[ touch.identifier ];
+
+	}
 
 }
 
@@ -382,7 +433,7 @@ uniform sampler2D tPrevious1;
 uniform sampler2D tPosition0;
 uniform sampler2D tPosition1;
 
-#define dt 0.016
+#define dt2 0.000256
 
 vec3 unpackPosition( vec3 pos ) {
 
@@ -394,16 +445,14 @@ vec3 unpackPosition( vec3 pos ) {
 
 void main() {
 
-	float dt2 = dt * dt;
-
 	vec2 uv = gl_FragCoord.xy / tSize.xy;
 
 	vec3 org = texture2D( tOriginal, uv ).xyz;
 	vec3 prv = ( texture2D( tPrevious0, uv ).xyz + texture2D( tPrevious1, uv ).xyz ) / 1024.0;
 	vec3 pos = ( texture2D( tPosition0, uv ).xyz + texture2D( tPosition1, uv ).xyz ) / 1024.0;
 
-	vec3 offset = ( org - pos ) * 20.5 * dt2 * 8.33333;
-	vec3 disp = ( pos - prv ) * 0.91 + pos;
+	vec3 offset = ( org - pos ) * 18.5 * dt2 * 8.33333;
+	vec3 disp = ( pos - prv ) * 0.94 + pos;
 
 	gl_FragColor = vec4( unpackPosition( disp + offset ), 1.0 );
 
@@ -414,9 +463,10 @@ var mouse_frag = /* glsl */`
 precision highp float;
 precision highp sampler2D;
 
-uniform float psel;
+uniform float vertices[3];
+uniform vec3 coordinates[3];
+
 uniform vec2 tSize;
-uniform vec3 mouse;
 uniform float order;
 uniform sampler2D tPosition0;
 uniform sampler2D tPosition1;
@@ -455,17 +505,25 @@ void main() {
 
 	vec3 pos = packPosition( uv );
 	vec3 org = texture2D( tOriginal, uv ).xyz;
-	vec3 ref = texture2D( tOriginal, getUV( psel ) ).xyz;
 
-	vec3 diff, proj, offset = mouse - ref;
+	vec3 ref, diff, proj, offset;
+	
+	for ( int i = 0; i < 3; ++i ) {
 
-	if ( distance( org, ref ) <= 0.1 )  {
+		if ( vertices[ i ] == - 1.0 ) continue;
 
-		diff = ref - org;
+		ref = texture2D( tOriginal, getUV( vertices[ i ] ) ).xyz;
+		offset = coordinates[ i ] - ref;
 
-		proj = dot( diff, offset ) / dot( offset, offset ) * org;
+		if ( distance( org, ref ) <= 0.1 )  {
 
-		pos = org + proj + offset;
+			diff = ref - org;
+
+			proj = dot( diff, offset ) / dot( offset, offset ) * org;
+
+			pos = org + proj + offset;
+
+		}
 
 	}
 
@@ -607,10 +665,10 @@ integrateShader.uniforms = {
 const mouseShader = copyShader.clone();
 mouseShader.fragmentShader = mouse_frag;
 mouseShader.uniforms = {
-	psel: { value: null },
+	vertices: { value: null },
+	coordinates: { type: 'v3' },
 	order: {},
 	tSize: { type: 'v2' },
-	mouse: { type: 'v3' },
 	tOriginal: { type: 't' },
 	tPosition0: { type: 't' },
 	tPosition1: { type: 't' }
@@ -883,8 +941,8 @@ function mouseOffset() {
 
 	mesh.material = mouseShader;
 	mouseShader.uniforms.tSize.value = tSize;
-	mouseShader.uniforms.psel.value = psel;
-	mouseShader.uniforms.mouse.value = mouse3d;
+	mouseShader.uniforms.vertices.value = vertices$1;
+	mouseShader.uniforms.coordinates.value = coordinates;
 	mouseShader.uniforms.tOriginal.value = originalRT.texture;
 	mouseShader.uniforms.tPosition0.value = positionRT[ 0 ].texture;
 	mouseShader.uniforms.tPosition1.value = positionRT[ 1 ].texture;

@@ -2,9 +2,10 @@ export default /* glsl */`
 precision highp float;
 precision highp sampler2D;
 
-uniform float psel;
+uniform float vertices[3];
+uniform vec3 coordinates[3];
+
 uniform vec2 tSize;
-uniform vec3 mouse;
 uniform float order;
 uniform sampler2D tPosition0;
 uniform sampler2D tPosition1;
@@ -43,17 +44,25 @@ void main() {
 
 	vec3 pos = packPosition( uv );
 	vec3 org = texture2D( tOriginal, uv ).xyz;
-	vec3 ref = texture2D( tOriginal, getUV( psel ) ).xyz;
 
-	vec3 diff, proj, offset = mouse - ref;
+	vec3 ref, diff, proj, offset;
+	
+	for ( int i = 0; i < 3; ++i ) {
 
-	if ( distance( org, ref ) <= 0.1 )  {
+		if ( vertices[ i ] == - 1.0 ) continue;
 
-		diff = ref - org;
+		ref = texture2D( tOriginal, getUV( vertices[ i ] ) ).xyz;
+		offset = coordinates[ i ] - ref;
 
-		proj = dot( diff, offset ) / dot( offset, offset ) * org;
+		if ( distance( org, ref ) <= 0.1 )  {
 
-		pos = org + proj + offset;
+			diff = ref - org;
+
+			proj = dot( diff, offset ) / dot( offset, offset ) * org;
+
+			pos = org + proj + offset;
+
+		}
 
 	}
 

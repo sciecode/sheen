@@ -41,10 +41,10 @@ integrateShader.uniforms = {
 const mouseShader = copyShader.clone();
 mouseShader.fragmentShader = mouse_frag;
 mouseShader.uniforms = {
-	psel: { value: null },
+	vertices: { value: null },
+	coordinates: { type: 'v3' },
 	order: {},
 	tSize: { type: 'v2' },
-	mouse: { type: 'v3' },
 	tOriginal: { type: 't' },
 	tPosition0: { type: 't' },
 	tPosition1: { type: 't' }
