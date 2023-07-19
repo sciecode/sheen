@@ -14,7 +14,7 @@ RESOLUTION,
 renderer, mesh, targetRT, normalsRT,
 originalRT, previousRT, positionRT,
 adjacentsRT, distancesRT,
-steps = 40;
+steps = 40, prevTime, dt;
 
 
 const
@@ -72,6 +72,8 @@ function init( WebGLRenderer ) {
 		copyTexture( originalRT, previousRT[ i ], !i );
 
 	}
+
+	prevTime = performance.now();
 
 }
 
@@ -183,11 +185,14 @@ function integrate() {
 
 	mesh.material = integrateShader;
 	integrateShader.uniforms.tSize.value = tSize;
+	integrateShader.uniforms.dt.value = dt;
 	integrateShader.uniforms.tOriginal.value = originalRT.texture;
 	integrateShader.uniforms.tPrevious0.value = previousRT[ 0 ].texture;
 	integrateShader.uniforms.tPrevious1.value = previousRT[ 1 ].texture;
 	integrateShader.uniforms.tPosition0.value = positionRT[ 0 ].texture;
 	integrateShader.uniforms.tPosition1.value = positionRT[ 1 ].texture;
+
+	// console.log(dt);
 
 	// integer-part
 	integrateShader.uniforms.order.value = 1;
@@ -294,6 +299,10 @@ function computeVertexNormals( ) {
 
 function update() {
 
+	const now = performance.now();
+	dt = (now - prevTime)/1000;
+	prevTime = now;
+
 	integrate();
 
 	let mouseUpdating = MOUSE.updating();
@@ -308,6 +317,10 @@ function update() {
 
 	computeVertexNormals();
 
+}
+
+window.onfocus = function() {
+	prevTime = performance.now();
 }
 
 export { init, update, positionRT, normalsRT };
