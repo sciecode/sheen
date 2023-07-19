@@ -300,7 +300,7 @@ function computeVertexNormals( ) {
 function update() {
 
 	const now = performance.now();
-	dt = (now - prevTime)/1000;
+	dt = Math.min(now - prevTime, 33.333)/1000;
 	prevTime = now;
 
 	integrate();
