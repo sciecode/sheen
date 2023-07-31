@@ -14,8 +14,8 @@ RESOLUTION,
 renderer, mesh, targetRT, normalsRT,
 originalRT, previousRT, positionRT,
 adjacentsRT, distancesRT,
-steps = 40, prevTime, dt;
-
+iterations = 5, steps = 6,
+prevTime, dt;
 
 const
 tSize = new THREE.Vector2(),
@@ -300,19 +300,18 @@ function computeVertexNormals( ) {
 function update() {
 
 	const now = performance.now();
-	dt = Math.min(now - prevTime, 33.333)/1000;
+	const frame_dt = Math.min(now - prevTime, 33.333)/1000;
+	dt = frame_dt/steps;
 	prevTime = now;
-
-	integrate();
 
 	let mouseUpdating = MOUSE.updating();
 
 	for ( let i = 0; i < steps; i++ ) {
-
-		if ( mouseUpdating && i < steps - 5 ) mouseOffset();
-
-		solveConstraints();
-
+		integrate();
+		for ( let j = 0; j < iterations; j++ ) {
+			if ( mouseUpdating && (i<steps-2||j<iterations-2) ) mouseOffset();
+			solveConstraints();
+		}
 	}
 
 	computeVertexNormals();

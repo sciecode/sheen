@@ -29,7 +29,8 @@ vec2 getUV( float id ) {
 vec3 getDisplacement( vec3 point0, vec3 point1, float restDistance ) {
 
     float curDistance = distance( point0, point1 );
-	return 1.5 * ( curDistance - restDistance ) * ( point1 - point0 ) / curDistance;
+	if (curDistance < 0.0001) return vec3(0.0);
+	return .5 * ( curDistance - restDistance ) * ( point1 - point0 ) / curDistance;
 	
 }
 
@@ -80,7 +81,7 @@ void main() {
     displacement += getDisplacement( p0, p5, distancesB.x );
     displacement += ( adjacentB.y > 0.0 ) ? getDisplacement( p0, p6, distancesB.y ) : vec3( 0 );
 
-	p0 += 0.76 * displacement / ( ( adjacentB.y > 0.0 ) ? 6.0 : 5.0 );
+	p0 += displacement / ( ( adjacentB.y > 0.0 ) ? 6.0 : 5.0 );
 
 	gl_FragColor = vec4( unpackPosition( p0 ), 1.0 );
 

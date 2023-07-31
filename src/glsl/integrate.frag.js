@@ -29,10 +29,11 @@ void main() {
 	vec3 prv = ( texture2D( tPrevious0, uv ).xyz + texture2D( tPrevious1, uv ).xyz ) / 1024.0;
 	vec3 pos = ( texture2D( tPosition0, uv ).xyz + texture2D( tPosition1, uv ).xyz ) / 1024.0;
 
-	vec3 offset = ( org - pos ) * 260.5 * dt2;
-	vec3 disp = ( pos - prv ) * 0.94 + pos;
+	vec3 accel = 345.*(org-pos);
+	vec3 vel = (pos-prv)/dt+accel*dt;
+	vec3 disp = 0.98*vel*dt;
 
-	gl_FragColor = vec4( unpackPosition( disp + offset ), 1.0 );
+	gl_FragColor = vec4( unpackPosition( pos + disp ), 1.0 );
 
 }
 `;
