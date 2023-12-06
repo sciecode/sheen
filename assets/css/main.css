@@ -15,6 +15,8 @@ canvas {
 
 #footer {
 	position: absolute;
+	display: flex;
+	align-items: center;
 	right: 4vw;
 	bottom: 5vh;
 	user-select: none;
@@ -22,7 +24,7 @@ canvas {
 
 .footers, .footers a {
 	font-weight: 600;
-	display: inline-block;
+	display: block;
 	color: #e4e5e6;
 	font-size: 14px;
 	text-rendering: optimizeLegibility;
@@ -32,6 +34,45 @@ canvas {
 	user-select: none;
 }
 
-.footers a {
-	text-decoration: underline;
+.footers {
+	margin: auto 5px;
+}
+
+#twitter {
+	display: block;
+	height: 16px;
+	aspect-ratio: 1;
+	background-color: #e4e5e6;
+	mask-image: url(../images/twitter.svg);
+	mask-repeat: no-repeat;
+	mask-size: contain;
+	-webkit-mask-image: url(../images/twitter.svg);
+	-webkit-mask-repeat: no-repeat;
+	-webkit-mask-size: contain;
+}
+
+#mastodon {
+	display: block;
+	height: 16px;
+	aspect-ratio: 1;
+	background-color: #e4e5e6;
+	mask-image: url(../images/mastodon.svg);
+	mask-repeat: no-repeat;
+	mask-size: contain;
+	-webkit-mask-image: url(../images/mastodon.svg);
+	-webkit-mask-repeat: no-repeat;
+	-webkit-mask-size: contain;
+}
+
+#github {
+	display: block;
+	height: 16px;
+	aspect-ratio: 1;
+	background-color: #e4e5e6;
+	mask-image: url(../images/github.svg);
+	mask-repeat: no-repeat;
+	mask-size: contain;
+	-webkit-mask-image: url(../images/github.svg);
+	-webkit-mask-repeat: no-repeat;
+	-webkit-mask-size: contain;
 }
