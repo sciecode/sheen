@@ -18,14 +18,16 @@ function init( PerspectiveCamera ) {
 	camera = PerspectiveCamera;
 	plane.normal.copy( camera.position ).normalize();
 
-	window.addEventListener('mousemove', onMouseMove );
-	window.addEventListener('mousedown', onMouseDown );
-	window.addEventListener('mouseout', onMouseOut );
-	window.addEventListener('mouseup', onMouseUp );
+	const canvas = document.getElementsByTagName( 'canvas' )[0];
 
-	window.addEventListener('touchmove', onTouchMove, { passive: false } );
-	window.addEventListener('touchstart', onTouchDown, { passive: false } );
-	window.addEventListener('touchend', onTouchUp );
+	canvas.addEventListener('mousemove', onMouseMove );
+	canvas.addEventListener('mousedown', onMouseDown );
+	canvas.addEventListener('mouseout', onMouseOut );
+	canvas.addEventListener('mouseup', onMouseUp );
+
+	canvas.addEventListener('touchmove', onTouchMove, { passive: false } );
+	canvas.addEventListener('touchstart', onTouchDown, { passive: false } );
+	canvas.addEventListener('touchend', onTouchUp );
 
 }
 
